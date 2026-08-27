@@ -1,18 +1,24 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/session";
 import { StageBadge } from "@/components/documents/stage-badge";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
 import { AssignmentCard, type AssignedUser } from "@/components/documents/assignment-card";
 import { VersionCard } from "@/components/documents/version-card";
+import { StageTimeline, type TimelineTransition } from "@/components/documents/stage-timeline";
+import { CommentHistory } from "@/components/documents/comment-history";
+import { ActionPanel } from "@/components/documents/action-panel";
 import { daysSince } from "@/lib/utils/dates";
-import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
+import { getCurrentStageAssigneeId } from "@/lib/utils/permissions";
+import type { DocumentStatus, MinimalDocument, Role, Stage } from "@/lib/types/domain";
 
 export default async function DocumentDetailPage({
   params,
 }: PageProps<"/documents/[id]">) {
   const { id } = await params;
   const supabase = await createClient();
+  const currentUser = await getCurrentUser();
 
   const { data: doc } = await supabase
     .from("documents")
@@ -20,29 +26,45 @@ export default async function DocumentDetailPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (!doc) {
+  if (!doc || !currentUser) {
     // RLS sudah menyaring — bisa karena memang tidak ada, atau ada tapi
     // user tidak berhak lihat. Tidak dibedakan ke user (brief §6.5).
     notFound();
   }
 
-  const assignedIds = [
-    doc.ketua_tim_id,
-    doc.dalnis_id,
-    doc.dalmut_id,
-    doc.operator_id,
-  ];
-
-  const [{ data: assignedUsers }, { data: versions }] = await Promise.all([
-    supabase.from("users").select("id, name, email").in("id", assignedIds),
+  const [{ data: versions }, { data: transitionsRaw }] = await Promise.all([
     supabase
       .from("document_versions")
       .select("*")
       .eq("document_id", id)
       .order("version_number", { ascending: false }),
+    supabase
+      .from("stage_transitions")
+      .select("*")
+      .eq("document_id", id)
+      .order("created_at", { ascending: true }),
   ]);
 
-  const userMap = new Map((assignedUsers ?? []).map((u) => [u.id, u]));
+  const versionNumberById = new Map(
+    (versions ?? []).map((v) => [v.id, v.version_number]),
+  );
+
+  const relevantUserIds = new Set<string>([
+    doc.ketua_tim_id,
+    doc.dalnis_id,
+    doc.dalmut_id,
+    doc.operator_id,
+    doc.submitter_id,
+    ...(transitionsRaw ?? []).map((t) => t.actor_id),
+  ]);
+
+  const { data: relevantUsers } = await supabase
+    .from("users")
+    .select("id, name, email")
+    .in("id", Array.from(relevantUserIds));
+
+  const userMap = new Map((relevantUsers ?? []).map((u) => [u.id, u]));
+
   const team: AssignedUser[] = (
     [
       ["ketua_tim", doc.ketua_tim_id],
@@ -55,8 +77,42 @@ export default async function DocumentDetailPage({
     return { role, name: u?.name ?? "—", email: u?.email ?? "" };
   });
 
+  const transitions: TimelineTransition[] = (transitionsRaw ?? []).map((t) => ({
+    id: t.id,
+    fromStage: t.from_stage,
+    toStage: t.to_stage,
+    action: t.action,
+    actorName: userMap.get(t.actor_id)?.name ?? "—",
+    comment: t.comment,
+    versionNumber: t.version_id ? (versionNumberById.get(t.version_id) ?? null) : null,
+    isSuperseded: t.is_superseded,
+    createdAt: t.created_at,
+  }));
+
+  const minimalDoc: MinimalDocument = {
+    id: doc.id,
+    submitterId: doc.submitter_id,
+    ketuaTimId: doc.ketua_tim_id,
+    dalnisId: doc.dalnis_id,
+    dalmutId: doc.dalmut_id,
+    operatorId: doc.operator_id,
+    currentStage: doc.current_stage as Stage,
+    status: doc.status as DocumentStatus,
+  };
+
+  const holderId = getCurrentStageAssigneeId(minimalDoc);
+  const holderName = holderId ? (userMap.get(holderId)?.name ?? null) : null;
+
+  const lastRejectTransition = [...transitions]
+    .reverse()
+    .find((t) => t.action === "reject" && !t.isSuperseded);
+  const lastRejection =
+    doc.status === "revision_requested" && lastRejectTransition && lastRejectTransition.comment
+      ? { actorName: lastRejectTransition.actorName, comment: lastRejectTransition.comment }
+      : null;
+
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div>
         <p className="text-sm text-text-muted tabular-nums">{doc.nomor_surat_tugas}</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -81,6 +137,17 @@ export default async function DocumentDetailPage({
               uploadNotes={v.upload_notes}
             />
           ))}
+
+          <h2 className="mt-3 text-lg font-semibold text-foreground">Timeline</h2>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <StageTimeline
+              currentStage={doc.current_stage as Stage}
+              status={doc.status}
+              transitions={transitions}
+            />
+          </div>
+
+          <CommentHistory transitions={transitions} />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -100,8 +167,13 @@ export default async function DocumentDetailPage({
             <AssignmentCard team={team} />
           </div>
 
-          <div className="rounded-lg border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
-            Timeline tahap & aksi reviu akan tersedia di Milestone 3.
+          <div className="sticky top-4">
+            <ActionPanel
+              doc={minimalDoc}
+              currentUserId={currentUser.id}
+              holderName={holderName}
+              lastRejection={lastRejection}
+            />
           </div>
         </div>
       </div>

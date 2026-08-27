@@ -182,6 +182,37 @@ export interface Database {
         };
         Returns: Database["public"]["Tables"]["documents"]["Row"];
       };
+      submit_document: {
+        Args: { p_document_id: string; p_comment?: string | null };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      approve_review: {
+        Args: { p_document_id: string; p_comment?: string | null };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      reject_review: {
+        Args: {
+          p_document_id: string;
+          p_target_stage: number;
+          p_comment: string;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      finalize_document: {
+        Args: { p_document_id: string; p_comment?: string | null };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      format_fix_and_finalize: {
+        Args: {
+          p_document_id: string;
+          p_file_path: string;
+          p_file_name: string;
+          p_file_size: number;
+          p_mime_type: string;
+          p_comment?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
