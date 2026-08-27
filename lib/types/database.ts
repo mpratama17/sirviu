@@ -13,6 +13,11 @@
  * tidak menghasilkan union type, hanya `text`/`string`. Union yang lebih
  * ketat ada di `lib/types/domain.ts` — pakai itu di kode aplikasi, bukan
  * langsung tipe `Database`.
+ *
+ * `Relationships: []` di setiap tabel WAJIB ada meski kosong — itu bagian
+ * dari `GenericTable` constraint di @supabase/postgrest-js. Tanpa itu,
+ * seluruh inference `.from(...).select(...)` diam-diam collapse ke `never`
+ * (pernah kejadian, lihat git blame / AGENTS.md).
  */
 
 export type Json =
@@ -51,6 +56,7 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       documents: {
         Row: {
@@ -84,6 +90,7 @@ export interface Database {
           current_stage_started_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["documents"]["Insert"]>;
+        Relationships: [];
       };
       document_versions: {
         Row: {
@@ -113,6 +120,7 @@ export interface Database {
         Update: Partial<
           Database["public"]["Tables"]["document_versions"]["Insert"]
         >;
+        Relationships: [];
       };
       stage_transitions: {
         Row: {
@@ -144,6 +152,7 @@ export interface Database {
         Update: Partial<
           Database["public"]["Tables"]["stage_transitions"]["Insert"]
         >;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -155,6 +164,23 @@ export interface Database {
       is_assigned_to_document: {
         Args: { p_user_id: string; p_document_id: string };
         Returns: boolean;
+      };
+      create_document: {
+        Args: {
+          p_document_id: string;
+          p_nomor_surat_tugas: string;
+          p_nama_laporan: string;
+          p_ketua_tim_id: string;
+          p_dalnis_id: string;
+          p_dalmut_id: string;
+          p_operator_id: string;
+          p_file_path: string;
+          p_file_name: string;
+          p_file_size: number;
+          p_mime_type: string;
+          p_upload_notes?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
       };
     };
     Enums: Record<string, never>;

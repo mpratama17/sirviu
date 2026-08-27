@@ -1,30 +1,165 @@
-import { FolderOpen } from "lucide-react";
+import Link from "next/link";
+import { FolderOpen, SearchX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
+import { getUserRoleOnDocument } from "@/lib/utils/permissions";
+import { daysSince } from "@/lib/utils/dates";
+import { DocumentFilters } from "@/components/documents/document-filters";
+import { DocumentTable, type DocumentRow } from "@/components/documents/document-table";
+import { DocumentPagination } from "@/components/documents/pagination";
+import { EmptyState } from "@/components/documents/empty-state";
+import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
 
-/**
- * Placeholder Milestone 1 — deliverable-nya cuma "login berhasil, redirect
- * ke dashboard kosong". List dokumen sungguhan + filter + search dibangun
- * di Milestone 2 (brief §9).
- */
-export default async function DashboardPage() {
+const PAGE_SIZE = 20;
+
+const ROLE_COLUMN: Record<Role, string> = {
+  ketua_tim: "ketua_tim_id",
+  dalnis: "dalnis_id",
+  dalmut: "dalmut_id",
+  operator: "operator_id",
+  admin: "id", // tidak dipakai — admin bukan opsi filter peran
+};
+
+function parseStages(param: string | undefined): Stage[] {
+  if (!param) return [];
+  return param
+    .split(",")
+    .map(Number)
+    .filter((n): n is Stage => n >= 1 && n <= 7);
+}
+
+/** Buang karakter yang punya arti khusus di syntax filter PostgREST (`,`, `(`, `)`). */
+function sanitizeSearchTerm(q: string): string {
+  return q.replace(/[,()]/g, " ").trim();
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: PageProps<"/dashboard">) {
+  const params = await searchParams;
   const user = await getCurrentUser();
+  if (!user) return null; // ditangani AppLayout
 
-  return (
-    <div className="flex flex-col gap-1">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-        Dashboard
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        Selamat datang, {user?.name}.
-      </p>
+  const q = typeof params.q === "string" ? sanitizeSearchTerm(params.q) : "";
+  const stages = parseStages(typeof params.stage === "string" ? params.stage : undefined);
+  const status = typeof params.status === "string" ? (params.status as DocumentStatus) : "";
+  const peran = typeof params.peran === "string" ? (params.peran as Role) : "";
+  const from = typeof params.from === "string" ? params.from : "";
+  const to = typeof params.to === "string" ? params.to : "";
+  const page = Math.max(1, Number(params.page) || 1);
 
-      <div className="mt-6 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border py-24 text-center">
-        <FolderOpen className="size-10 text-text-muted" aria-hidden="true" />
-        <p className="text-sm text-muted-foreground">
-          Belum ada dokumen. Dokumen yang Anda submit atau di mana Anda
-          ditunjuk sebagai reviewer akan muncul di sini.
+  const rangeFrom = (page - 1) * PAGE_SIZE;
+  const rangeTo = rangeFrom + PAGE_SIZE - 1;
+
+  const supabase = await createClient();
+  let query = supabase.from("documents").select("*", { count: "exact" });
+
+  if (peran && peran in ROLE_COLUMN) {
+    query = query.eq(ROLE_COLUMN[peran], user.id);
+  } else {
+    query = query.or(
+      `submitter_id.eq.${user.id},ketua_tim_id.eq.${user.id},dalnis_id.eq.${user.id},dalmut_id.eq.${user.id},operator_id.eq.${user.id}`,
+    );
+  }
+
+  if (stages.length > 0) query = query.in("current_stage", stages);
+  if (status) query = query.eq("status", status);
+  if (from) query = query.gte("created_at", from);
+  if (to) query = query.lte("created_at", `${to}T23:59:59`);
+  if (q) query = query.or(`nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`);
+
+  const { data, count, error } = await query
+    .order("created_at", { ascending: false })
+    .range(rangeFrom, rangeTo);
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Dashboard
+        </h1>
+        <p className="mt-6 text-sm text-destructive">
+          Gagal memuat dokumen: {error.message}
         </p>
       </div>
+    );
+  }
+
+  const rows: DocumentRow[] = (data ?? []).map((doc) => ({
+    id: doc.id,
+    nomorSuratTugas: doc.nomor_surat_tugas,
+    namaLaporan: doc.nama_laporan,
+    currentStage: doc.current_stage as Stage,
+    status: doc.status as DocumentStatus,
+    daysInStage: daysSince(doc.current_stage_started_at),
+    createdAt: doc.created_at,
+    myRole: getUserRoleOnDocument(
+      {
+        id: doc.id,
+        submitterId: doc.submitter_id,
+        ketuaTimId: doc.ketua_tim_id,
+        dalnisId: doc.dalnis_id,
+        dalmutId: doc.dalmut_id,
+        operatorId: doc.operator_id,
+        currentStage: doc.current_stage as Stage,
+        status: doc.status as DocumentStatus,
+      },
+      user.id,
+    ),
+  }));
+
+  const totalCount = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const hasFilters = !!(q || stages.length || status || peran || from || to);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {totalCount} dokumen{hasFilters ? " (terfilter)" : ""}
+          </p>
+        </div>
+        {user.roles.includes("ketua_tim") ? (
+          <Button
+            render={<Link href="/documents/new" />}
+            nativeButton={false}
+            className="shrink-0"
+          >
+            + Upload Dokumen Baru
+          </Button>
+        ) : null}
+      </div>
+
+      <DocumentFilters />
+
+      {rows.length === 0 ? (
+        hasFilters ? (
+          <EmptyState
+            icon={SearchX}
+            title="Tidak ada dokumen yang cocok dengan filter Anda."
+          />
+        ) : (
+          <EmptyState
+            icon={FolderOpen}
+            title="Belum ada dokumen. Dokumen yang Anda submit atau di mana Anda ditunjuk sebagai reviewer akan muncul di sini."
+            action={
+              user.roles.includes("ketua_tim")
+                ? { label: "Upload Dokumen Baru", href: "/documents/new" }
+                : undefined
+            }
+          />
+        )
+      ) : (
+        <>
+          <DocumentTable rows={rows} />
+          <DocumentPagination page={page} totalPages={totalPages} />
+        </>
+      )}
     </div>
   );
 }

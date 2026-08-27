@@ -1,5 +1,38 @@
-import { ComingSoon } from "@/components/layout/coming-soon";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/session";
+import { DocumentForm } from "@/components/documents/document-form";
+import type { SelectableUser } from "@/components/documents/user-combobox";
 
-export default function NewDocumentPage() {
-  return <ComingSoon title="Upload Dokumen Baru" milestone="Milestone 2" />;
+export default async function NewDocumentPage() {
+  const user = await getCurrentUser();
+  if (!user || !user.roles.includes("ketua_tim")) {
+    redirect("/dashboard");
+  }
+
+  const supabase = await createClient();
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, name, email, roles, is_active")
+    .order("name");
+
+  const selectableUsers: SelectableUser[] = (users ?? []).map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    roles: u.roles,
+    isActive: u.is_active,
+  }));
+
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-1">
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        Upload Dokumen Baru
+      </h1>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Isi nomor surat tugas seperti tertera di dokumen fisik.
+      </p>
+      <DocumentForm users={selectableUsers} currentUserId={user.id} />
+    </div>
+  );
 }
