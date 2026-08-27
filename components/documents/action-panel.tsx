@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ApproveModal } from "@/components/documents/approve-modal";
 import { RejectModal } from "@/components/documents/reject-modal";
 import { FormatFixModal } from "@/components/documents/format-fix-modal";
+import { UploadRevisionModal } from "@/components/documents/upload-revision-modal";
 import { submitDocument, finalizeDocument } from "@/lib/actions/reviews";
 import {
   canApprove,
@@ -34,6 +35,7 @@ export function ActionPanel({
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [formatFixOpen, setFormatFixOpen] = useState(false);
+  const [uploadRevisionOpen, setUploadRevisionOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const nextStageName =
@@ -93,7 +95,7 @@ export function ActionPanel({
     );
   }
 
-  // KT di stage 1/3/5, revision_requested → upload revisi (Milestone 4).
+  // KT di stage 1/3/5, revision_requested → upload revisi.
   if (canUploadRevision(doc, currentUserId)) {
     return (
       <div className="flex flex-col gap-3 rounded-lg border border-status-revision/30 bg-status-revision/5 p-4">
@@ -103,9 +105,14 @@ export function ActionPanel({
             dengan alasan: {lastRejection.comment}
           </p>
         ) : null}
-        <Button className="w-full" disabled title="Segera hadir — Milestone 4">
+        <Button className="w-full" onClick={() => setUploadRevisionOpen(true)}>
           Upload Versi Baru
         </Button>
+        <UploadRevisionModal
+          documentId={doc.id}
+          open={uploadRevisionOpen}
+          onOpenChange={setUploadRevisionOpen}
+        />
       </div>
     );
   }

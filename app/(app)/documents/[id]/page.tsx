@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
 import { StageBadge } from "@/components/documents/stage-badge";
@@ -6,6 +8,8 @@ import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
 import { AssignmentCard, type AssignedUser } from "@/components/documents/assignment-card";
 import { VersionCard } from "@/components/documents/version-card";
+import { VersionSelector } from "@/components/documents/version-selector";
+import { PdfViewerLoader } from "@/components/documents/pdf-viewer-loader";
 import { StageTimeline, type TimelineTransition } from "@/components/documents/stage-timeline";
 import { CommentHistory } from "@/components/documents/comment-history";
 import { ActionPanel } from "@/components/documents/action-panel";
@@ -15,8 +19,10 @@ import type { DocumentStatus, MinimalDocument, Role, Stage } from "@/lib/types/d
 
 export default async function DocumentDetailPage({
   params,
+  searchParams,
 }: PageProps<"/documents/[id]">) {
   const { id } = await params;
+  const query = await searchParams;
   const supabase = await createClient();
   const currentUser = await getCurrentUser();
 
@@ -111,6 +117,20 @@ export default async function DocumentDetailPage({
       ? { actorName: lastRejectTransition.actorName, comment: lastRejectTransition.comment }
       : null;
 
+  const allVersions = versions ?? [];
+  const latestVersionNumber = allVersions[0]?.version_number ?? 1;
+  const requestedVersion = typeof query.v === "string" ? Number(query.v) : null;
+  const selectedVersion =
+    allVersions.find((v) => v.version_number === requestedVersion) ?? allVersions[0];
+
+  let previewUrl: string | null = null;
+  if (selectedVersion?.mime_type === "application/pdf") {
+    const { data: signed } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(selectedVersion.file_path, 300);
+    previewUrl = signed?.signedUrl ?? null;
+  }
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div>
@@ -122,13 +142,49 @@ export default async function DocumentDetailPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold text-foreground">Versi Dokumen</h2>
-          {(versions ?? []).map((v) => (
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-foreground">Dokumen</h2>
+            <div className="flex items-center gap-2">
+              {selectedVersion ? (
+                <VersionSelector
+                  versionNumbers={allVersions.map((v) => v.version_number)}
+                  latestVersionNumber={latestVersionNumber}
+                  selected={selectedVersion.version_number}
+                />
+              ) : null}
+              {selectedVersion ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  nativeButton={false}
+                  render={
+                    <a
+                      href={`/documents/${doc.id}/download?v=${selectedVersion.version_number}`}
+                    />
+                  }
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  Download
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          {selectedVersion?.mime_type === "application/pdf" && previewUrl ? (
+            <PdfViewerLoader fileUrl={previewUrl} />
+          ) : selectedVersion ? (
+            <p className="rounded-md bg-secondary px-3 py-2 text-sm text-muted-foreground">
+              File .docx tidak bisa dipratinjau. Silakan download.
+            </p>
+          ) : null}
+
+          <h2 className="mt-3 text-lg font-semibold text-foreground">Riwayat Versi</h2>
+          {allVersions.map((v) => (
             <VersionCard
               key={v.id}
               documentId={doc.id}
               versionNumber={v.version_number}
-              isLatest={v.version_number === versions?.[0]?.version_number}
+              isLatest={v.version_number === latestVersionNumber}
               fileName={v.file_name}
               fileSize={v.file_size}
               mimeType={v.mime_type}

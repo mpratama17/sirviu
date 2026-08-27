@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { documentMetadataSchema, validateUploadFile } from "@/lib/validators/documents";
@@ -104,5 +105,72 @@ export async function createDocument(
     };
   }
 
+  revalidatePath("/dashboard");
   return { success: true, data: { id: data.id } };
+}
+
+/**
+ * Upload Revisi (Milestone 4) — KT upload versi baru saat status
+ * `revision_requested`. Pola sama dengan createDocument: upload storage
+ * dulu (admin client), baru RPC untuk DB rows (session client, actor dari
+ * auth.uid()).
+ */
+export async function uploadRevision(
+  documentId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+
+  const file = formData.get("file");
+  const fileCheck = validateUploadFile(file instanceof File ? file : null);
+  if (!fileCheck.valid) {
+    return { success: false, error: fileCheck.error };
+  }
+  const uploadedFile = file as File;
+  const uploadNotes = (formData.get("uploadNotes") as string | null)?.trim() || null;
+
+  const admin = createAdminClient();
+  const { count: versionCount } = await admin
+    .from("document_versions")
+    .select("id", { count: "exact", head: true })
+    .eq("document_id", documentId);
+  const nextVersion = (versionCount ?? 0) + 1;
+
+  const sanitizedFileName = uploadedFile.name.replace(/[^\w.\-]+/g, "_");
+  const filePath = `${documentId}/v${nextVersion}/${sanitizedFileName}`;
+
+  const { error: uploadError } = await admin.storage
+    .from("documents")
+    .upload(filePath, uploadedFile, {
+      contentType: uploadedFile.type,
+      upsert: false,
+    });
+  if (uploadError) {
+    return { success: false, error: `Gagal upload file: ${uploadError.message}` };
+  }
+
+  const { error: rpcError } = await supabase.rpc("upload_revision", {
+    p_document_id: documentId,
+    p_file_path: filePath,
+    p_file_name: uploadedFile.name,
+    p_file_size: uploadedFile.size,
+    p_mime_type: uploadedFile.type,
+    p_upload_notes: uploadNotes,
+  });
+
+  if (rpcError) {
+    await admin.storage.from("documents").remove([filePath]);
+    return { success: false, error: rpcError.message };
+  }
+
+  revalidatePath(`/documents/${documentId}`);
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
 }

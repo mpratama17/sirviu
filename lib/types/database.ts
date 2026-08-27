@@ -213,6 +213,17 @@ export interface Database {
         };
         Returns: Database["public"]["Tables"]["documents"]["Row"];
       };
+      upload_revision: {
+        Args: {
+          p_document_id: string;
+          p_file_path: string;
+          p_file_name: string;
+          p_file_size: number;
+          p_mime_type: string;
+          p_upload_notes?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

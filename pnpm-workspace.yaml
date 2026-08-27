@@ -1,3 +1,8 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+
+# react-pdf requires pdfjs-dist hoisted to work with its `new URL(...,
+# import.meta.url)` worker-loading pattern under pnpm 11+.
+publicHoistPattern:
+  - pdfjs-dist
