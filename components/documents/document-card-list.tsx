@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { StageBadge } from "@/components/documents/stage-badge";
 import { StatusBadge } from "@/components/documents/status-badge";
@@ -6,15 +8,28 @@ import { DaysInStage } from "@/components/documents/days-in-stage";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { DocumentRow } from "@/components/documents/document-table";
 
-/** Versi mobile dashboard table — DESIGN_BRIEF §7 (table -> card list di < md). */
+/**
+ * Versi mobile dashboard table — DESIGN_BRIEF §7 (table -> card list di
+ * < sm). Card sengaja BUKAN <Link> yang membungkus <a> download — <a> di
+ * dalam <a> itu HTML tidak valid dan bikin hydration mismatch (ketahuan
+ * lewat automated check, bukan dugaan). Card jadi <div> + onClick
+ * (navigasi lewat router), tombol download tetap <a> asli.
+ */
 export function DocumentCardList({ rows }: { rows: readonly DocumentRow[] }) {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col gap-3 sm:hidden">
       {rows.map((row) => (
-        <Link
+        <div
           key={row.id}
-          href={`/documents/${row.id}`}
-          className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4"
+          role="link"
+          tabIndex={0}
+          onClick={() => router.push(`/documents/${row.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") router.push(`/documents/${row.id}`);
+          }}
+          className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card p-4"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -49,7 +64,7 @@ export function DocumentCardList({ rows }: { rows: readonly DocumentRow[] }) {
             </span>
             <DaysInStage days={row.daysInStage} />
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );
