@@ -66,6 +66,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
         <form action={signOut} className="w-full">
           <DropdownMenuItem
             render={<button type="submit" className="w-full" />}
+            nativeButton={true}
             variant="destructive"
           >
             <LogOut className="size-4" aria-hidden="true" />

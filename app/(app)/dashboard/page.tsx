@@ -55,9 +55,17 @@ export default async function DashboardPage({
   const supabase = await createClient();
   let query = supabase.from("documents").select("*", { count: "exact" });
 
+  const isAdmin = user.roles.includes("admin");
+
   if (peran && peran in ROLE_COLUMN) {
+    // Filter "Peran Saya" tetap berlaku eksplisit walau admin — mereka
+    // mungkin memang mau lihat "cuma yang saya jadi Dalnis", misalnya.
     query = query.eq(ROLE_COLUMN[peran], user.id);
-  } else {
+  } else if (!isAdmin) {
+    // Involvement filter HANYA untuk non-admin. Admin bisa lihat semua
+    // dokumen (brief §6.5) — RLS sudah mengizinkan ini (is_admin() di
+    // policy documents_select), jadi query di sini tidak boleh
+    // mempersempitnya lagi lewat filter tambahan.
     query = query.or(
       `submitter_id.eq.${user.id},ketua_tim_id.eq.${user.id},dalnis_id.eq.${user.id},dalmut_id.eq.${user.id},operator_id.eq.${user.id}`,
     );
