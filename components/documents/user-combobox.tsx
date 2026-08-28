@@ -40,17 +40,24 @@ export function UserCombobox({
   onChange,
   placeholder = "Pilih user...",
   disabledIds,
+  includeInactive = false,
 }: {
   users: readonly SelectableUser[];
-  role: Role;
+  /** Filter kandidat ke role tertentu. Tanpa ini, semua user ditampilkan
+   * (dipakai mis. filter "actor" di audit trail, bukan cuma assignment). */
+  role?: Role;
   value: string | undefined;
   onChange: (userId: string) => void;
   placeholder?: string;
   /** User yang sudah dipilih di dropdown lain — dicegah dipilih dobel. */
   disabledIds?: readonly string[];
+  /** Tampilkan user non-aktif juga (mis. filter audit trail perlu lihat histori user yang sudah non-aktif). */
+  includeInactive?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const candidates = users.filter((u) => u.isActive && u.roles.includes(role));
+  const candidates = users.filter(
+    (u) => (includeInactive || u.isActive) && (!role || u.roles.includes(role)),
+  );
   const selected = candidates.find((u) => u.id === value);
 
   return (
