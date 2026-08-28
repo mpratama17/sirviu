@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { LoginForm } from "@/components/auth/login-form";
 
 export default async function LoginPage({
   searchParams,
@@ -18,13 +20,29 @@ export default async function LoginPage({
           </p>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col gap-4">
           <GoogleSignInButton />
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-text-muted">atau</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <LoginForm />
+
           {error ? (
-            <p role="alert" className="mt-3 text-center text-sm text-destructive">
+            <p role="alert" className="text-center text-sm text-destructive">
               {error}
             </p>
           ) : null}
+
+          <p className="text-center text-sm text-muted-foreground">
+            Belum punya akun?{" "}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              Daftar
+            </Link>
+          </p>
         </div>
       </div>
 

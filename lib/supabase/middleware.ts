@@ -8,7 +8,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/magic-callback"];
+const PUBLIC_PATHS = ["/login", "/register", "/auth/callback", "/auth/magic-callback"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthenticated && pathname === "/login") {
+  if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     dashboardUrl.search = "";
