@@ -4,7 +4,13 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { documentMetadataSchema, validateUploadFile } from "@/lib/validators/documents";
+import { getCurrentUser } from "@/lib/supabase/session";
+import {
+  adminDeleteDocumentSchema,
+  documentMetadataSchema,
+  editDocumentMetadataSchema,
+  validateUploadFile,
+} from "@/lib/validators/documents";
 import type { ActionResult } from "@/lib/types/action-result";
 
 /**
@@ -221,5 +227,105 @@ export async function deleteDocument(documentId: string): Promise<ActionResult> 
   }
 
   revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}
+
+/**
+ * Edit metadata dokumen oleh admin — deviation dari brief, lihat AGENTS.md
+ * & migration ...000007. Guard admin dicek dua kali (di sini dan lagi di
+ * dalam RPC `admin_update_document_metadata` lewat `is_admin()`) — sama
+ * seperti pola di `lib/actions/admin.ts`, defense in depth kalau salah
+ * satu lapis somehow punya bug.
+ */
+export async function adminUpdateDocumentMetadata(
+  documentId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+  if (!currentUser.roles.includes("admin")) {
+    return { success: false, error: "Hanya admin yang boleh mengedit metadata dokumen." };
+  }
+
+  const parsed = editDocumentMetadataSchema.safeParse({
+    nomorSuratTugas: formData.get("nomorSuratTugas"),
+    namaLaporan: formData.get("namaLaporan"),
+    ketuaTimId: formData.get("ketuaTimId"),
+    dalnisId: formData.get("dalnisId"),
+    dalmutId: formData.get("dalmutId"),
+    operatorId: formData.get("operatorId"),
+    reason: formData.get("reason") ?? "",
+  });
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Data tidak valid.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_update_document_metadata", {
+    p_document_id: documentId,
+    p_nomor_surat_tugas: parsed.data.nomorSuratTugas,
+    p_nama_laporan: parsed.data.namaLaporan,
+    p_ketua_tim_id: parsed.data.ketuaTimId,
+    p_dalnis_id: parsed.data.dalnisId,
+    p_dalmut_id: parsed.data.dalmutId,
+    p_operator_id: parsed.data.operatorId,
+    p_reason: parsed.data.reason || null,
+  });
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/documents/${documentId}`);
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}
+
+/**
+ * Hard delete oleh admin — dokumen APAPUN, stage/status manapun (beda dari
+ * `deleteDocument` di atas, yang khusus submitter sendiri di stage 1
+ * sebelum pernah disubmit). Deviation eksplisit dari prinsip append-only
+ * (pilihan user, lihat AGENTS.md) — RPC menyimpan snapshot ke
+ * `deleted_documents_log` SEBELUM cascade-delete, jadi minimal ada jejak
+ * yang selamat. File storage dibersihkan di sini (RPC tidak bisa panggil
+ * storage API) pakai file_path yang RPC kembalikan — best-effort, gagal di
+ * sini tidak fatal karena DB row-nya sendiri sudah bersih.
+ */
+export async function adminDeleteDocument(
+  documentId: string,
+  rawReason: string,
+): Promise<ActionResult> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+  if (!currentUser.roles.includes("admin")) {
+    return { success: false, error: "Hanya admin yang boleh menghapus dokumen." };
+  }
+
+  const parsed = adminDeleteDocumentSchema.safeParse({ reason: rawReason });
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Alasan penghapusan tidak valid.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: filePaths, error } = await supabase.rpc("admin_delete_document", {
+    p_document_id: documentId,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return { success: false, error: error.message };
+
+  if (filePaths && filePaths.length > 0) {
+    const admin = createAdminClient();
+    await admin.storage.from("documents").remove(filePaths);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/audit");
   return { success: true, data: undefined };
 }

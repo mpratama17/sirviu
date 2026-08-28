@@ -134,6 +134,7 @@ export interface Database {
           comment: string | null;
           target_stage_on_reject: number | null;
           is_superseded: boolean;
+          is_admin_override: boolean;
           created_at: string;
         };
         Insert: {
@@ -147,10 +148,79 @@ export interface Database {
           comment?: string | null;
           target_stage_on_reject?: number | null;
           is_superseded?: boolean;
+          is_admin_override?: boolean;
           created_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["stage_transitions"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      // Migration ...000007 (admin_full_access) — log admin edit metadata
+      // dokumen di luar alur reviu (bukan stage_transitions).
+      document_edit_log: {
+        Row: {
+          id: string;
+          document_id: string;
+          edited_by: string;
+          edited_at: string;
+          field_changes: Json;
+          reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          edited_by: string;
+          edited_at?: string;
+          field_changes: Json;
+          reason?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["document_edit_log"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      // Migration ...000007 — snapshot yang selamat dari admin_delete_document
+      // (hard delete). Sengaja tidak reference public.documents (tidak ikut cascade).
+      deleted_documents_log: {
+        Row: {
+          id: string;
+          original_document_id: string;
+          nomor_surat_tugas: string;
+          nama_laporan: string;
+          submitter_id: string | null;
+          ketua_tim_id: string | null;
+          dalnis_id: string | null;
+          dalmut_id: string | null;
+          operator_id: string | null;
+          current_stage: number;
+          status: string;
+          versions_snapshot: Json;
+          transitions_snapshot: Json;
+          deleted_by: string;
+          deleted_at: string;
+          reason: string;
+        };
+        Insert: {
+          id?: string;
+          original_document_id: string;
+          nomor_surat_tugas: string;
+          nama_laporan: string;
+          submitter_id?: string | null;
+          ketua_tim_id?: string | null;
+          dalnis_id?: string | null;
+          dalmut_id?: string | null;
+          operator_id?: string | null;
+          current_stage: number;
+          status: string;
+          versions_snapshot: Json;
+          transitions_snapshot: Json;
+          deleted_by: string;
+          deleted_at?: string;
+          reason: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["deleted_documents_log"]["Insert"]
         >;
         Relationships: [];
       };
@@ -223,6 +293,23 @@ export interface Database {
           p_upload_notes?: string | null;
         };
         Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      admin_update_document_metadata: {
+        Args: {
+          p_document_id: string;
+          p_nomor_surat_tugas: string;
+          p_nama_laporan: string;
+          p_ketua_tim_id: string;
+          p_dalnis_id: string;
+          p_dalmut_id: string;
+          p_operator_id: string;
+          p_reason?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      admin_delete_document: {
+        Args: { p_document_id: string; p_reason: string };
+        Returns: string[];
       };
     };
     Enums: Record<string, never>;

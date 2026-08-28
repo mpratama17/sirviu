@@ -25,11 +25,22 @@ export function ActionPanel({
   currentUserId,
   holderName,
   lastRejection,
+  isAdmin = false,
+  isOverride = false,
 }: {
   doc: MinimalDocument;
   currentUserId: string;
   holderName: string | null;
   lastRejection: { actorName: string; comment: string } | null;
+  /**
+   * Deviation dari brief §7 (lihat AGENTS.md & migration ...000007) —
+   * admin boleh bertindak sebagai pemegang stage saat ini di dokumen
+   * MANAPUN, bukan cuma yang mereka assigned. Stage/status check tetap
+   * berlaku sama; ini cuma melonggarkan syarat "userId harus cocok".
+   */
+  isAdmin?: boolean;
+  /** true kalau currentUserId BUKAN pemegang tahap saat ini (dihitung caller dari getCurrentStageAssigneeId) — dipakai untuk banner transparansi, mirror `is_admin_override` di DB. */
+  isOverride?: boolean;
 }) {
   const router = useRouter();
   const [approveOpen, setApproveOpen] = useState(false);
@@ -83,10 +94,20 @@ export function ActionPanel({
     );
   }
 
+  // Banner kecil supaya jelas kalau admin sedang bertindak di luar
+  // assignment aslinya (bukan pemalsuan — actor_id tetap admin, ini cuma
+  // transparansi UI untuk hal yang sama yang tercatat di is_admin_override).
+  const overrideNote = isAdmin && isOverride ? (
+    <p className="rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
+      Anda bertindak sebagai admin, bukan sebagai pemegang tahap ini.
+    </p>
+  ) : null;
+
   // KT di stage 1/3/5, in_progress → submit.
-  if (canSubmit(doc, currentUserId)) {
+  if (canSubmit(doc, currentUserId, isAdmin)) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+        {overrideNote}
         <Button className="w-full" onClick={handleSubmit} disabled={isPending}>
           {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
           Submit ke Reviewer Berikutnya
@@ -96,9 +117,10 @@ export function ActionPanel({
   }
 
   // KT di stage 1/3/5, revision_requested → upload revisi.
-  if (canUploadRevision(doc, currentUserId)) {
+  if (canUploadRevision(doc, currentUserId, isAdmin)) {
     return (
       <div className="flex flex-col gap-3 rounded-lg border border-status-revision/30 bg-status-revision/5 p-4">
+        {overrideNote}
         {lastRejection ? (
           <p className="text-sm text-foreground">
             Dokumen dikembalikan oleh <strong>{lastRejection.actorName}</strong>{" "}
@@ -118,9 +140,10 @@ export function ActionPanel({
   }
 
   // Dalnis (stage 2) / Dalmut (stage 4) → approve / reject.
-  if (canApprove(doc, currentUserId)) {
+  if (canApprove(doc, currentUserId, isAdmin)) {
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+        {overrideNote}
         <Button className="w-full" onClick={() => setApproveOpen(true)}>
           Approve — Lanjut ke Stage Berikutnya
         </Button>
@@ -145,9 +168,10 @@ export function ActionPanel({
   }
 
   // Operator di stage 6 → finalize / format fix / reject.
-  if (canFinalize(doc, currentUserId)) {
+  if (canFinalize(doc, currentUserId, isAdmin)) {
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+        {overrideNote}
         <Button className="w-full" onClick={handleFinalize} disabled={isPending}>
           {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
           Finalize Dokumen

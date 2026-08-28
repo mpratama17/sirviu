@@ -63,6 +63,7 @@ export default async function AdminAuditPage({
     toStage: t.to_stage,
     comment: t.comment,
     isSuperseded: t.is_superseded,
+    isAdminOverride: t.is_admin_override,
   }));
 
   const selectableUsers: SelectableUser[] = (allUsers ?? []).map((u) => ({

@@ -41,6 +41,51 @@ export const documentMetadataSchema = z.object({
 export type DocumentMetadataInput = z.infer<typeof documentMetadataSchema>;
 
 /**
+ * Edit metadata dokumen oleh admin (deviation dari brief, lihat AGENTS.md
+ * & migration ...000007) — field sama dengan `documentMetadataSchema`
+ * minus `uploadNotes` (bukan bagian dari edit, itu milik versi file).
+ */
+export const editDocumentMetadataSchema = z.object({
+  nomorSuratTugas: z
+    .string()
+    .trim()
+    .min(1, "Nomor surat tugas wajib diisi.")
+    .max(200, "Nomor surat tugas maksimal 200 karakter."),
+  namaLaporan: z
+    .string()
+    .trim()
+    .min(1, "Nama laporan wajib diisi.")
+    .max(300, "Nama laporan maksimal 300 karakter."),
+  ketuaTimId: uuid,
+  dalnisId: uuid,
+  dalmutId: uuid,
+  operatorId: uuid,
+  reason: z
+    .string()
+    .trim()
+    .max(2000, "Alasan maksimal 2000 karakter.")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type EditDocumentMetadataInput = z.infer<
+  typeof editDocumentMetadataSchema
+>;
+
+/** Hard delete oleh admin — alasan wajib (aksi ireversibel, lihat migration ...000007). */
+export const adminDeleteDocumentSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Alasan penghapusan minimal 10 karakter.")
+    .max(2000, "Alasan penghapusan maksimal 2000 karakter."),
+});
+
+export type AdminDeleteDocumentInput = z.infer<
+  typeof adminDeleteDocumentSchema
+>;
+
+/**
  * Validasi file di server (client-side check di file-dropzone.tsx pakai
  * aturan yang sama, tapi tidak bisa dipercaya — file bisa datang dari
  * request yang di-construct manual).

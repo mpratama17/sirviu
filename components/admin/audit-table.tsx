@@ -24,6 +24,8 @@ export interface AuditRow {
   toStage: number;
   comment: string | null;
   isSuperseded: boolean;
+  /** true kalau actor bertindak sebagai admin di luar assignment aslinya — lihat migration ...000007. */
+  isAdminOverride: boolean;
 }
 
 export function AuditTable({ rows }: { rows: readonly AuditRow[] }) {
@@ -64,6 +66,15 @@ export function AuditTable({ rows }: { rows: readonly AuditRow[] }) {
                 <span className="text-foreground">{row.actorName}</span>
                 {row.actorRole ? (
                   <span className="text-xs text-text-muted"> · {ROLE_LABELS[row.actorRole]}</span>
+                ) : null}
+                {row.isAdminOverride ? (
+                  <Badge
+                    variant="outline"
+                    className="ml-1.5 border-status-revision/40 text-status-revision"
+                    title="Admin bertindak di luar assignment aslinya di dokumen ini"
+                  >
+                    Admin Override
+                  </Badge>
                 ) : null}
               </TableCell>
               <TableCell>

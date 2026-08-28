@@ -34,14 +34,20 @@ export function isAssignedToCurrentStage(
 
 /**
  * Ketua Tim di stage 1/3/5, status `in_progress` → boleh submit ke tahap
- * berikutnya.
+ * berikutnya. `isAdmin` (deviation dari brief §7, lihat AGENTS.md) meloloskan
+ * siapa pun dengan role admin bertindak sebagai pemegang stage — state
+ * machine (stage/status check) TIDAK dilonggarkan, cuma syarat kepemilikan.
  */
-export function canSubmit(doc: MinimalDocument, userId: string): boolean {
+export function canSubmit(
+  doc: MinimalDocument,
+  userId: string,
+  isAdmin = false,
+): boolean {
   const stage = STAGE_DEFINITIONS[doc.currentStage];
   return (
     stage.isUploadStage &&
     doc.status === "in_progress" &&
-    doc.ketuaTimId === userId
+    (doc.ketuaTimId === userId || isAdmin)
   );
 }
 
@@ -53,22 +59,27 @@ export function canSubmit(doc: MinimalDocument, userId: string): boolean {
 export function canUploadRevision(
   doc: MinimalDocument,
   userId: string,
+  isAdmin = false,
 ): boolean {
   const stage = STAGE_DEFINITIONS[doc.currentStage];
   return (
     stage.isUploadStage &&
     doc.status === "revision_requested" &&
-    doc.ketuaTimId === userId
+    (doc.ketuaTimId === userId || isAdmin)
   );
 }
 
 /** Dalnis di stage 2 atau Dalmut di stage 4, status `in_progress` → boleh approve. */
-export function canApprove(doc: MinimalDocument, userId: string): boolean {
+export function canApprove(
+  doc: MinimalDocument,
+  userId: string,
+  isAdmin = false,
+): boolean {
   const stage = STAGE_DEFINITIONS[doc.currentStage];
   return (
     stage.isReviewStage &&
     doc.status === "in_progress" &&
-    isAssignedToCurrentStage(doc, userId)
+    (isAssignedToCurrentStage(doc, userId) || isAdmin)
   );
 }
 
@@ -76,23 +87,31 @@ export function canApprove(doc: MinimalDocument, userId: string): boolean {
  * Dalnis/Dalmut/Operator (stage 2, 4, 6) status `in_progress` → boleh
  * reject ("kembalikan untuk revisi").
  */
-export function canReject(doc: MinimalDocument, userId: string): boolean {
+export function canReject(
+  doc: MinimalDocument,
+  userId: string,
+  isAdmin = false,
+): boolean {
   const stage = STAGE_DEFINITIONS[doc.currentStage];
   const isRejectableStage = stage.isReviewStage || stage.isOperatorStage;
   return (
     isRejectableStage &&
     doc.status === "in_progress" &&
-    isAssignedToCurrentStage(doc, userId)
+    (isAssignedToCurrentStage(doc, userId) || isAdmin)
   );
 }
 
 /** Operator di stage 6, status `in_progress` → boleh finalize atau format-fix. */
-export function canFinalize(doc: MinimalDocument, userId: string): boolean {
+export function canFinalize(
+  doc: MinimalDocument,
+  userId: string,
+  isAdmin = false,
+): boolean {
   const stage = STAGE_DEFINITIONS[doc.currentStage];
   return (
     stage.isOperatorStage &&
     doc.status === "in_progress" &&
-    doc.operatorId === userId
+    (doc.operatorId === userId || isAdmin)
   );
 }
 
@@ -141,6 +160,17 @@ export function canHardDelete(
   if (doc.submitterId !== userId) return false;
   if (doc.currentStage !== 1) return false;
   return !transitions.some((t) => t.action !== "submit");
+}
+
+/**
+ * Admin hard-delete (deviation dari brief, lihat AGENTS.md & migration
+ * ...000007) — berbeda dari `canHardDelete` di atas (yang khusus submitter
+ * sendiri, stage 1, belum pernah disubmit). Admin boleh hapus dokumen
+ * APAPUN di stage/status manapun; satu-satunya syarat adalah role admin
+ * itu sendiri, ditegakkan lagi di RPC `admin_delete_document`.
+ */
+export function canAdminDelete(userRoles: readonly Role[]): boolean {
+  return userRoles.includes("admin");
 }
 
 /** Peran efektif user pada dokumen ini ("KT" / "Dalnis" / dst), untuk kolom "Peran Saya". */

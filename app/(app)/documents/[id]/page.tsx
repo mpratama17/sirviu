@@ -14,8 +14,15 @@ import { StageTimeline, type TimelineTransition } from "@/components/documents/s
 import { CommentHistory } from "@/components/documents/comment-history";
 import { ActionPanel } from "@/components/documents/action-panel";
 import { DeleteDocumentButton } from "@/components/documents/delete-document-button";
+import { AdminDeleteButton } from "@/components/documents/admin-delete-button";
+import { EditDocumentModal } from "@/components/documents/edit-document-modal";
+import type { SelectableUser } from "@/components/documents/user-combobox";
 import { daysSince } from "@/lib/utils/dates";
-import { canHardDelete, getCurrentStageAssigneeId } from "@/lib/utils/permissions";
+import {
+  canAdminDelete,
+  canHardDelete,
+  getCurrentStageAssigneeId,
+} from "@/lib/utils/permissions";
 import type {
   DocumentStatus,
   MinimalDocument,
@@ -119,8 +126,30 @@ export default async function DocumentDetailPage({
     (transitionsRaw ?? []).map((t) => ({ action: t.action as TransitionAction })),
   );
 
+  const isAdmin = currentUser.roles.includes("admin");
+  const canDeleteAsAdmin = canAdminDelete(currentUser.roles as Role[]);
+
   const holderId = getCurrentStageAssigneeId(minimalDoc);
   const holderName = holderId ? (userMap.get(holderId)?.name ?? null) : null;
+  const isOverride = isAdmin && holderId !== null && holderId !== currentUser.id;
+
+  // Daftar user aktif untuk combobox reassign di modal edit — cuma di-fetch
+  // kalau admin (satu-satunya yang bisa lihat modalnya), biar tidak nambah
+  // query buat semua orang lain.
+  let selectableUsers: SelectableUser[] = [];
+  if (isAdmin) {
+    const { data: allUsers } = await supabase
+      .from("users")
+      .select("id, name, email, roles, is_active")
+      .order("name");
+    selectableUsers = (allUsers ?? []).map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      roles: u.roles,
+      isActive: u.is_active,
+    }));
+  }
 
   const lastRejectTransition = [...transitions]
     .reverse()
@@ -242,8 +271,28 @@ export default async function DocumentDetailPage({
               currentUserId={currentUser.id}
               holderName={holderName}
               lastRejection={lastRejection}
+              isAdmin={isAdmin}
+              isOverride={isOverride}
             />
-            {canDelete ? <DeleteDocumentButton documentId={doc.id} /> : null}
+            {isAdmin ? (
+              <EditDocumentModal
+                documentId={doc.id}
+                users={selectableUsers}
+                initial={{
+                  nomorSuratTugas: doc.nomor_surat_tugas,
+                  namaLaporan: doc.nama_laporan,
+                  ketuaTimId: doc.ketua_tim_id,
+                  dalnisId: doc.dalnis_id,
+                  dalmutId: doc.dalmut_id,
+                  operatorId: doc.operator_id,
+                }}
+              />
+            ) : null}
+            {canDeleteAsAdmin ? (
+              <AdminDeleteButton documentId={doc.id} />
+            ) : canDelete ? (
+              <DeleteDocumentButton documentId={doc.id} />
+            ) : null}
           </div>
         </div>
       </div>

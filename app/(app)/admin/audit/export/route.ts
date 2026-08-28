@@ -75,6 +75,7 @@ export async function GET(request: Request) {
     "To Stage",
     "Komentar",
     "Superseded",
+    "Admin Override",
   ]);
 
   for (const t of transitions ?? []) {
@@ -89,6 +90,7 @@ export async function GET(request: Request) {
       String(t.to_stage),
       t.comment ?? "",
       t.is_superseded ? "ya" : "tidak",
+      t.is_admin_override ? "ya" : "tidak",
     ]);
   }
 
