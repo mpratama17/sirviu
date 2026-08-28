@@ -13,9 +13,16 @@ import { PdfViewerLoader } from "@/components/documents/pdf-viewer-loader";
 import { StageTimeline, type TimelineTransition } from "@/components/documents/stage-timeline";
 import { CommentHistory } from "@/components/documents/comment-history";
 import { ActionPanel } from "@/components/documents/action-panel";
+import { DeleteDocumentButton } from "@/components/documents/delete-document-button";
 import { daysSince } from "@/lib/utils/dates";
-import { getCurrentStageAssigneeId } from "@/lib/utils/permissions";
-import type { DocumentStatus, MinimalDocument, Role, Stage } from "@/lib/types/domain";
+import { canHardDelete, getCurrentStageAssigneeId } from "@/lib/utils/permissions";
+import type {
+  DocumentStatus,
+  MinimalDocument,
+  Role,
+  Stage,
+  TransitionAction,
+} from "@/lib/types/domain";
 
 export default async function DocumentDetailPage({
   params,
@@ -105,6 +112,12 @@ export default async function DocumentDetailPage({
     currentStage: doc.current_stage as Stage,
     status: doc.status as DocumentStatus,
   };
+
+  const canDelete = canHardDelete(
+    minimalDoc,
+    currentUser.id,
+    (transitionsRaw ?? []).map((t) => ({ action: t.action as TransitionAction })),
+  );
 
   const holderId = getCurrentStageAssigneeId(minimalDoc);
   const holderName = holderId ? (userMap.get(holderId)?.name ?? null) : null;
@@ -223,13 +236,14 @@ export default async function DocumentDetailPage({
             <AssignmentCard team={team} />
           </div>
 
-          <div className="sticky top-4">
+          <div className="sticky top-4 flex flex-col gap-3">
             <ActionPanel
               doc={minimalDoc}
               currentUserId={currentUser.id}
               holderName={holderName}
               lastRejection={lastRejection}
             />
+            {canDelete ? <DeleteDocumentButton documentId={doc.id} /> : null}
           </div>
         </div>
       </div>

@@ -242,7 +242,7 @@ export function DocumentForm({
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-0 -mx-6 flex items-center justify-between border-t border-border bg-card px-6 py-4 shadow-elevated">
+      <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-card px-4 py-4 shadow-elevated sm:-mx-6 sm:px-6">
         <Button
           type="button"
           variant="link"

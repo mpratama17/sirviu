@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { AppShell } from "@/components/layout/app-shell";
 import { getCurrentUser } from "@/lib/supabase/session";
 
 /**
@@ -44,15 +43,5 @@ export default async function AppLayout({
     );
   }
 
-  return (
-    <div className="flex h-svh">
-      <Sidebar user={user} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+  return <AppShell user={user}>{children}</AppShell>;
 }

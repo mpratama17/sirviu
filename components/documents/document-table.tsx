@@ -16,6 +16,7 @@ import {
 import { StageBadge } from "@/components/documents/stage-badge";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
+import { DocumentCardList } from "@/components/documents/document-card-list";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
 
@@ -32,7 +33,9 @@ export interface DocumentRow {
 
 export function DocumentTable({ rows }: { rows: readonly DocumentRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <>
+      <DocumentCardList rows={rows} />
+      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
       <Table>
         <TableHeader>
           <TableRow>
@@ -112,6 +115,7 @@ export function DocumentTable({ rows }: { rows: readonly DocumentRow[] }) {
           ))}
         </TableBody>
       </Table>
-    </div>
+      </div>
+    </>
   );
 }

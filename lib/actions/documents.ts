@@ -174,3 +174,52 @@ export async function uploadRevision(
   revalidatePath("/dashboard");
   return { success: true, data: undefined };
 }
+
+/**
+ * Hard delete dokumen (Milestone 6). Eligibility (submitter, stage 1,
+ * belum pernah di-submit) ditegakkan DUA kali: `canHardDelete()` di UI
+ * untuk show/hide tombol, dan RLS policy `documents_delete` (migration
+ * 002) di database — client tidak bisa dipercaya untuk memutuskan ini
+ * sendiri, jadi delete langsung lewat session client, bukan admin.
+ *
+ * `document_versions`/`stage_transitions` ikut terhapus otomatis lewat
+ * `on delete cascade`. File di storage TIDAK cascade otomatis — dihapus
+ * di sini secara terpisah (best-effort, kegagalan tidak fatal karena DB
+ * row-nya sendiri sudah bersih).
+ */
+export async function deleteDocument(documentId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+
+  const { data: versions } = await supabase
+    .from("document_versions")
+    .select("file_path")
+    .eq("document_id", documentId);
+
+  const { error, count } = await supabase
+    .from("documents")
+    .delete({ count: "exact" })
+    .eq("id", documentId);
+
+  if (error) return { success: false, error: error.message };
+  if (!count) {
+    return {
+      success: false,
+      error: "Dokumen tidak ditemukan atau tidak memenuhi syarat untuk dihapus.",
+    };
+  }
+
+  if (versions && versions.length > 0) {
+    const admin = createAdminClient();
+    await admin.storage.from("documents").remove(versions.map((v) => v.file_path));
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true, data: undefined };
+}

@@ -7,7 +7,14 @@ import { getVisibleNavItems } from "@/components/layout/nav-items";
 import { UserMenu } from "@/components/layout/user-menu";
 import type { CurrentUser } from "@/lib/supabase/session";
 
-export function Sidebar({ user }: { user: CurrentUser }) {
+export function Sidebar({
+  user,
+  onNavigate,
+}: {
+  user: CurrentUser;
+  /** Dipanggil saat link diklik — dipakai AppShell untuk nutup drawer mobile. */
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const items = getVisibleNavItems(user.roles);
 
@@ -27,6 +34,7 @@ export function Sidebar({ user }: { user: CurrentUser }) {
             <Link
               key={item.label}
               href={item.href}
+              onClick={onNavigate}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",

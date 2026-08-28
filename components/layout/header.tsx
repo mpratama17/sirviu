@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 
 /**
@@ -13,16 +13,27 @@ import { NAV_ITEMS } from "@/components/layout/nav-items";
  * global dibangun di Milestone 2, notifikasi in-app masuk daftar Future
  * Enhancement (brief §10), badge sengaja dikosongkan sesuai DESIGN_BRIEF §5.2.
  */
-export function Header() {
+export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const activeItem = NAV_ITEMS.find((item) => pathname.startsWith(item.href));
   const breadcrumb = activeItem?.label ?? "SIRVIU";
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-6">
-      <p className="text-sm font-medium text-foreground">{breadcrumb}</p>
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-4 sm:gap-4 sm:px-6">
+      {onMenuClick ? (
+        <button
+          type="button"
+          aria-label="Buka menu"
+          onClick={onMenuClick}
+          className="rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground lg:hidden"
+        >
+          <Menu className="size-5" aria-hidden="true" />
+        </button>
+      ) : null}
 
-      <div className="relative mx-auto w-full max-w-md">
+      <p className="shrink-0 text-sm font-medium text-foreground">{breadcrumb}</p>
+
+      <div className="relative mx-auto hidden w-full max-w-md sm:block">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"
           aria-hidden="true"
@@ -40,7 +51,7 @@ export function Header() {
         type="button"
         aria-label="Notifikasi"
         disabled
-        className="relative rounded-md p-2 text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
+        className="relative ml-auto shrink-0 rounded-md p-2 text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60 sm:ml-0"
       >
         <Bell className="size-5" aria-hidden="true" />
       </button>
