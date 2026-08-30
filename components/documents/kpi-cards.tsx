@@ -40,7 +40,7 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
     {
       label: "Sedang Direviu",
       value: kpis.underReview,
-      hint: "Stage 2 · 4 · 6",
+      hint: "Stage 2 · 3 · 4",
       icon: Loader2,
       colorClass: "text-status-progress",
       bgClass: "bg-status-progress/10",
