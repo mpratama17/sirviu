@@ -64,3 +64,11 @@ Design.pdf
 # Third-party AI-tooling config, not part of this project's source.
 .ngodingpakeai/
 .ngodingpakeaiignore
+
+# AI-agent working docs / specs — kept locally for development, not pushed
+# to GitHub (user's explicit choice).
+AGENTS.md
+CLAUDE.md
+CLAUDE_CODE_BRIEF.md
+DESIGN_BRIEF.md
+.claude/
