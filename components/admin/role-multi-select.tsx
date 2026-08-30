@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RoleBadges } from "@/components/admin/role-badges";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { Role } from "@/lib/types/domain";
 
@@ -30,10 +31,20 @@ export function RoleMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        render={<Button type="button" variant="outline" className="w-full justify-between font-normal" />}
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto min-h-8 w-full items-start justify-between gap-2 py-1.5 font-normal whitespace-normal"
+          />
+        }
       >
-        {value.length === 0 ? "Pilih role..." : value.map((r) => ROLE_LABELS[r]).join(", ")}
-        <ChevronDown className="size-4 shrink-0 opacity-50" aria-hidden="true" />
+        {value.length === 0 ? (
+          "Pilih role..."
+        ) : (
+          <RoleBadges roles={value} />
+        )}
+        <ChevronDown className="mt-0.5 size-4 shrink-0 opacity-50" aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2" align="start">
         <div className="flex flex-col gap-1">
