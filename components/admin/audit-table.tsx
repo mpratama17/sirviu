@@ -10,7 +10,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ACTION_LABELS } from "@/lib/constants/stages";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types/domain";
+
+/** Warna badge per jenis aksi — DESIGN_BRIEF mockup terbaru, biar aksi beda jenis kelihatan sekilas tanpa baca teks. */
+const ACTION_CLASSES: Record<string, string> = {
+  approve: "border-transparent bg-status-approved/10 text-status-approved",
+  reject: "border-transparent bg-status-revision/10 text-status-revision",
+  submit: "border-transparent bg-primary/10 text-primary",
+  upload_revision: "border-transparent bg-status-progress/10 text-status-progress",
+  finalize: "border-transparent bg-status-finalized/10 text-status-finalized",
+  format_fix: "border-transparent bg-violet-500/10 text-violet-700",
+  cancel: "border-transparent bg-status-cancelled/10 text-status-cancelled",
+};
 
 export interface AuditRow {
   id: string;
@@ -78,7 +90,10 @@ export function AuditTable({ rows }: { rows: readonly AuditRow[] }) {
                 ) : null}
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="font-normal">
+                <Badge
+                  variant="outline"
+                  className={cn("font-medium", ACTION_CLASSES[row.action])}
+                >
                   {ACTION_LABELS[row.action] ?? row.action}
                 </Badge>
                 {row.isSuperseded ? (

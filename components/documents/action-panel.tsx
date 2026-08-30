@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApproveModal } from "@/components/documents/approve-modal";
 import { RejectModal } from "@/components/documents/reject-modal";
@@ -24,6 +24,7 @@ export function ActionPanel({
   doc,
   currentUserId,
   holderName,
+  holderRoleLabel,
   lastRejection,
   isAdmin = false,
   isOverride = false,
@@ -31,6 +32,8 @@ export function ActionPanel({
   doc: MinimalDocument;
   currentUserId: string;
   holderName: string | null;
+  /** Label peran pemegang stage saat ini (mis. "Pengendali Mutu") — ditampilkan di dalam kurung pada state menunggu. */
+  holderRoleLabel?: string | null;
   lastRejection: { actorName: string; comment: string } | null;
   /**
    * Deviation dari brief §7 (lihat AGENTS.md & migration ...000007) —
@@ -205,8 +208,15 @@ export function ActionPanel({
 
   // Bukan pemegang stage saat ini (atau bukan role yang relevan).
   return (
-    <div className="rounded-lg border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
-      Menunggu aksi dari {holderName ?? "pemegang stage saat ini"}.
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-secondary/50 p-3">
+      <Clock className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
+      <p className="text-xs text-muted-foreground">
+        Menunggu aksi dari{" "}
+        <strong className="font-medium text-foreground">
+          {holderName ?? "pemegang stage saat ini"}
+        </strong>
+        {holderRoleLabel ? ` (${holderRoleLabel})` : ""}.
+      </p>
     </div>
   );
 }

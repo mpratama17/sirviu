@@ -15,7 +15,7 @@ export default async function AdminUsersPage() {
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("users")
-    .select("id, name, email, roles, is_active")
+    .select("id, name, email, roles, is_active, created_at")
     .order("name");
 
   const rows: EditableUser[] = (users ?? []).map((u) => ({
@@ -24,14 +24,22 @@ export default async function AdminUsersPage() {
     email: u.email,
     roles: u.roles as Role[],
     isActive: u.is_active,
+    createdAt: u.created_at,
   }));
+
+  const activeCount = rows.filter((u) => u.isActive).length;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Manajemen Pengguna
-        </h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Manajemen Pengguna
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {rows.length} pengguna terdaftar · {activeCount} aktif
+          </p>
+        </div>
         <AddUserModal />
       </div>
       <UsersTable users={rows} />

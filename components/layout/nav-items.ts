@@ -46,3 +46,19 @@ export function getVisibleNavItems(roles: readonly string[]): NavItem[] {
     (item) => !item.requiredRole || roles.includes(item.requiredRole),
   );
 }
+
+/**
+ * Sama seperti `getVisibleNavItems`, tapi dipisah jadi grup utama vs admin —
+ * sidebar merender grup admin dengan section label terpisah (DESIGN_BRIEF
+ * mockup terbaru).
+ */
+export function getVisibleNavGroups(roles: readonly string[]): {
+  main: NavItem[];
+  admin: NavItem[];
+} {
+  const visible = getVisibleNavItems(roles);
+  return {
+    main: visible.filter((item) => item.requiredRole !== "admin"),
+    admin: visible.filter((item) => item.requiredRole === "admin"),
+  };
+}

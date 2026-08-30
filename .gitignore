@@ -48,3 +48,7 @@ supabase/.temp
 # Editor
 .vscode/*
 !.vscode/extensions.json
+
+# Playwright CLI session artifacts (screenshots/snapshots/logs from ad-hoc
+# browser verification, not test fixtures)
+.playwright-cli/

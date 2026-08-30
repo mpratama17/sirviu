@@ -119,6 +119,7 @@ export function UsersTable({ users }: { users: readonly EditableUser[] }) {
               <TableHead>Email</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Bergabung</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -158,6 +159,13 @@ export function UsersTable({ users }: { users: readonly EditableUser[] }) {
                     </TooltipContent>
                   </Tooltip>
                 </TableCell>
+                <TableCell className="text-muted-foreground text-xs tabular-nums">
+                  {new Date(user.createdAt).toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </TableCell>
                 <TableCell className="text-right">
                   <button
                     type="button"
@@ -172,7 +180,7 @@ export function UsersTable({ users }: { users: readonly EditableUser[] }) {
             ))}
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
                   Tidak ada pengguna yang cocok dengan filter.
                 </TableCell>
               </TableRow>

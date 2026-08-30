@@ -25,6 +25,7 @@ export interface EditableUser {
   email: string;
   roles: Role[];
   isActive: boolean;
+  createdAt: string;
 }
 
 export function EditUserModal({

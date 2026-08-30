@@ -3,9 +3,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
-import { StageBadge } from "@/components/documents/stage-badge";
-import { StatusBadge } from "@/components/documents/status-badge";
-import { DaysInStage } from "@/components/documents/days-in-stage";
+import { StatusBanner } from "@/components/documents/status-banner";
 import { AssignmentCard, type AssignedUser } from "@/components/documents/assignment-card";
 import { VersionCard } from "@/components/documents/version-card";
 import { VersionSelector } from "@/components/documents/version-selector";
@@ -18,6 +16,8 @@ import { AdminDeleteButton } from "@/components/documents/admin-delete-button";
 import { EditDocumentModal } from "@/components/documents/edit-document-modal";
 import type { SelectableUser } from "@/components/documents/user-combobox";
 import { daysSince } from "@/lib/utils/dates";
+import { STAGE_DEFINITIONS } from "@/lib/constants/stages";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import {
   canAdminDelete,
   canHardDelete,
@@ -131,6 +131,8 @@ export default async function DocumentDetailPage({
 
   const holderId = getCurrentStageAssigneeId(minimalDoc);
   const holderName = holderId ? (userMap.get(holderId)?.name ?? null) : null;
+  const holderRole = STAGE_DEFINITIONS[doc.current_stage as Stage].holderRole;
+  const holderRoleLabel = holderRole ? ROLE_LABELS[holderRole] : null;
   const isOverride = isAdmin && holderId !== null && holderId !== currentUser.id;
 
   // Daftar user aktif untuk combobox reassign di modal edit — cuma di-fetch
@@ -249,20 +251,15 @@ export default async function DocumentDetailPage({
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={doc.status as DocumentStatus} />
-              <StageBadge stage={doc.current_stage as Stage} />
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              <DaysInStage days={daysSince(doc.current_stage_started_at)} /> di
-              stage ini
-            </p>
-          </div>
+          <StatusBanner
+            status={doc.status as DocumentStatus}
+            stage={doc.current_stage as Stage}
+            daysInStage={daysSince(doc.current_stage_started_at)}
+          />
 
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="mb-3 text-sm font-semibold text-foreground">Tim Ditugaskan</h3>
-            <AssignmentCard team={team} />
+            <AssignmentCard team={team} activeRole={holderRole} />
           </div>
 
           <div className="sticky top-4 flex flex-col gap-3">
@@ -270,6 +267,7 @@ export default async function DocumentDetailPage({
               doc={minimalDoc}
               currentUserId={currentUser.id}
               holderName={holderName}
+              holderRoleLabel={holderRoleLabel}
               lastRejection={lastRejection}
               isAdmin={isAdmin}
               isOverride={isOverride}

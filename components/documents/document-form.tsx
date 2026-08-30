@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,18 @@ import {
   documentMetadataSchema,
   type DocumentMetadataInput,
 } from "@/lib/validators/documents";
+
+/** Badge lingkaran bernomor di samping judul section — DESIGN_BRIEF mockup terbaru. */
+function SectionTitle({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <CardTitle className="flex items-center gap-2.5">
+      <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary tabular-nums">
+        {n}
+      </span>
+      {children}
+    </CardTitle>
+  );
+}
 
 export function DocumentForm({
   users,
@@ -89,7 +101,7 @@ export function DocumentForm({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 pb-24">
       <Card>
         <CardHeader>
-          <CardTitle>Informasi Dokumen</CardTitle>
+          <SectionTitle n={1}>Informasi Dokumen</SectionTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -127,7 +139,7 @@ export function DocumentForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Tim Reviewer</CardTitle>
+          <SectionTitle n={2}>Tim Reviewer</SectionTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -222,7 +234,7 @@ export function DocumentForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>File Dokumen</CardTitle>
+          <SectionTitle n={3}>File Dokumen</SectionTitle>
         </CardHeader>
         <CardContent>
           <FileDropzone file={file} onChange={setFile} error={fileError} />
@@ -231,7 +243,7 @@ export function DocumentForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Catatan (opsional)</CardTitle>
+          <SectionTitle n={4}>Catatan (opsional)</SectionTitle>
         </CardHeader>
         <CardContent>
           <Textarea

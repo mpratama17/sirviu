@@ -3,13 +3,78 @@ import { FolderOpen, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
-import { getUserRoleOnDocument } from "@/lib/utils/permissions";
+import { getUserRoleOnDocument, isAssignedToCurrentStage } from "@/lib/utils/permissions";
 import { daysSince } from "@/lib/utils/dates";
 import { DocumentFilters } from "@/components/documents/document-filters";
 import { DocumentTable, type DocumentRow } from "@/components/documents/document-table";
 import { DocumentPagination } from "@/components/documents/pagination";
 import { EmptyState } from "@/components/documents/empty-state";
+import { KpiCards, type DashboardKpis } from "@/components/documents/kpi-cards";
 import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Kartu ringkasan di atas dashboard — dihitung dari fetch RINGAN terpisah
+ * (cuma kolom yang dibutuhkan permission logic), lepas dari filter/paginasi
+ * tabel di bawahnya (KPI selalu menggambarkan "dunia saya" secara utuh, mockup
+ * baru). Pakai visibility rule YANG SAMA dengan query utama (admin lihat
+ * semua, selain itu involvement filter) — jangan sampai KPI dan tabel
+ * berbeda cakupan.
+ */
+async function getDashboardKpis(
+  supabase: Supabase,
+  userId: string,
+  isAdmin: boolean,
+): Promise<DashboardKpis> {
+  let kpiQuery = supabase
+    .from("documents")
+    .select(
+      "id, current_stage, status, ketua_tim_id, dalnis_id, dalmut_id, operator_id, current_stage_started_at",
+    );
+
+  if (!isAdmin) {
+    kpiQuery = kpiQuery.or(
+      `submitter_id.eq.${userId},ketua_tim_id.eq.${userId},dalnis_id.eq.${userId},dalmut_id.eq.${userId},operator_id.eq.${userId}`,
+    );
+  }
+
+  const { data } = await kpiQuery;
+  const rows = data ?? [];
+
+  let needsMyAction = 0;
+  let underReview = 0;
+  let aging = 0;
+
+  for (const doc of rows) {
+    const minimal = {
+      id: doc.id,
+      submitterId: "",
+      ketuaTimId: doc.ketua_tim_id,
+      dalnisId: doc.dalnis_id,
+      dalmutId: doc.dalmut_id,
+      operatorId: doc.operator_id,
+      currentStage: doc.current_stage as Stage,
+      status: doc.status as DocumentStatus,
+    };
+
+    if (doc.status === "in_progress" && isAssignedToCurrentStage(minimal, userId)) {
+      needsMyAction++;
+    }
+    if ([2, 4, 6].includes(doc.current_stage)) {
+      underReview++;
+    }
+    if (
+      doc.status !== "finalized" &&
+      doc.status !== "cancelled" &&
+      daysSince(doc.current_stage_started_at) > 7
+    ) {
+      aging++;
+    }
+  }
+
+  return { total: rows.length, needsMyAction, underReview, aging };
+}
 
 const PAGE_SIZE = 20;
 
@@ -77,9 +142,10 @@ export default async function DashboardPage({
   if (to) query = query.lte("created_at", `${to}T23:59:59`);
   if (q) query = query.or(`nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`);
 
-  const { data, count, error } = await query
-    .order("created_at", { ascending: false })
-    .range(rangeFrom, rangeTo);
+  const [{ data, count, error }, kpis] = await Promise.all([
+    query.order("created_at", { ascending: false }).range(rangeFrom, rangeTo),
+    getDashboardKpis(supabase, user.id, isAdmin),
+  ]);
 
   if (error) {
     return (
@@ -142,6 +208,8 @@ export default async function DashboardPage({
           </Button>
         ) : null}
       </div>
+
+      <KpiCards kpis={kpis} />
 
       <DocumentFilters />
 

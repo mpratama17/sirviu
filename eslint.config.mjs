@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Exported design-canvas reference material (claude.ai/design), not
+    // application source — vendored bundler JS (support.js/doc-page.js)
+    // trips react/no-deprecated etc. Kept in repo for design reference only.
+    "SIRVIU Aplikasi UI Lengkap/**",
   ]),
 ]);
 
