@@ -10,9 +10,11 @@ import {
   resolveDocumentIdsForSearch,
 } from "@/lib/queries/audit";
 import { roleForTransition } from "@/lib/constants/audit";
+import { parseSortParams } from "@/lib/utils/sort";
 import type { SelectableUser } from "@/components/documents/user-combobox";
 
 const PAGE_SIZE = 50;
+const AUDIT_SORT_ALLOWED = ["created_at", "action"] as const;
 
 export default async function AdminAuditPage({
   searchParams,
@@ -27,12 +29,16 @@ export default async function AdminAuditPage({
   const page = Math.max(1, Number(params.page) || 1);
   const rangeFrom = (page - 1) * PAGE_SIZE;
   const rangeTo = rangeFrom + PAGE_SIZE - 1;
+  const activeSort = parseSortParams(params, AUDIT_SORT_ALLOWED, {
+    column: "created_at",
+    direction: "desc",
+  });
 
   const supabase = await createClient();
   const searchDocumentIds = await resolveDocumentIdsForSearch(supabase, filters.q);
 
   const [{ data: transitions, count, error }, { data: allUsers }] = await Promise.all([
-    buildAuditQuery(supabase, filters, searchDocumentIds).range(rangeFrom, rangeTo),
+    buildAuditQuery(supabase, filters, searchDocumentIds, activeSort).range(rangeFrom, rangeTo),
     supabase.from("users").select("id, name, email, roles, is_active").order("name"),
   ]);
 
@@ -90,7 +96,7 @@ export default async function AdminAuditPage({
         <p className="text-sm text-destructive">Gagal memuat audit trail: {error.message}</p>
       ) : (
         <>
-          <AuditTable rows={rows} />
+          <AuditTable rows={rows} activeSort={activeSort} />
           <DocumentPagination page={page} totalPages={totalPages} />
         </>
       )}

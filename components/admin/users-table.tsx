@@ -25,8 +25,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RoleBadges } from "@/components/admin/role-badges";
 import { EditUserModal, type EditableUser } from "@/components/admin/edit-user-modal";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { toggleUserActive } from "@/lib/actions/admin";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import type { SortState } from "@/lib/utils/sort";
 import type { Role } from "@/lib/types/domain";
 
 function initials(name: string): string {
@@ -40,7 +42,13 @@ function initials(name: string): string {
 
 const ALL_ROLE_VALUES: Role[] = ["ketua_tim", "dalnis", "dalmut", "operator", "admin"];
 
-export function UsersTable({ users }: { users: readonly EditableUser[] }) {
+export function UsersTable({
+  users,
+  activeSort,
+}: {
+  users: readonly EditableUser[];
+  activeSort: SortState;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
@@ -115,11 +123,17 @@ export function UsersTable({ users }: { users: readonly EditableUser[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>
+                <SortableHeader column="name" label="Nama" activeSort={activeSort} />
+              </TableHead>
+              <TableHead>
+                <SortableHeader column="email" label="Email" activeSort={activeSort} />
+              </TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Bergabung</TableHead>
+              <TableHead>
+                <SortableHeader column="created_at" label="Bergabung" activeSort={activeSort} />
+              </TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>

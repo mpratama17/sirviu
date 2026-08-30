@@ -10,6 +10,7 @@ import { DocumentTable, type DocumentRow } from "@/components/documents/document
 import { DocumentPagination } from "@/components/documents/pagination";
 import { EmptyState } from "@/components/documents/empty-state";
 import { KpiCards, type DashboardKpis } from "@/components/documents/kpi-cards";
+import { parseSortParams } from "@/lib/utils/sort";
 import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -113,6 +114,29 @@ export default async function DashboardPage({
   const from = typeof params.from === "string" ? params.from : "";
   const to = typeof params.to === "string" ? params.to : "";
   const page = Math.max(1, Number(params.page) || 1);
+  const scope = typeof params.scope === "string" ? params.scope : "";
+
+  const SORT_ALLOWED = [
+    "created_at",
+    "nomor_surat_tugas",
+    "nama_laporan",
+    "current_stage",
+    "days_in_stage",
+  ] as const;
+  const activeSort = parseSortParams(params, SORT_ALLOWED, {
+    column: "created_at",
+    direction: "desc",
+  });
+  // `days_in_stage` bukan kolom asli — hari di stage naik saat
+  // current_stage_started_at makin lama, jadi arah SQL-nya kebalik.
+  const orderColumn =
+    activeSort.column === "days_in_stage"
+      ? "current_stage_started_at"
+      : activeSort.column;
+  const ascending =
+    activeSort.column === "days_in_stage"
+      ? activeSort.direction === "desc"
+      : activeSort.direction === "asc";
 
   const rangeFrom = (page - 1) * PAGE_SIZE;
   const rangeTo = rangeFrom + PAGE_SIZE - 1;
@@ -121,16 +145,19 @@ export default async function DashboardPage({
   let query = supabase.from("documents").select("*", { count: "exact" });
 
   const isAdmin = user.roles.includes("admin");
+  // Sidebar "Dokumen Saya" mengirim `?scope=mine` — artinya filter
+  // involvement selalu diterapkan, bahkan untuk admin ("dokumen yang SAYA
+  // terlibat", bukan "semua yang boleh saya lihat"). Tanpa scope=mine,
+  // perilaku admin apa adanya (lihat semua) dipertahankan.
+  const scopeMine = scope === "mine";
 
   if (peran && peran in ROLE_COLUMN) {
     // Filter "Peran Saya" tetap berlaku eksplisit walau admin — mereka
     // mungkin memang mau lihat "cuma yang saya jadi Dalnis", misalnya.
     query = query.eq(ROLE_COLUMN[peran], user.id);
-  } else if (!isAdmin) {
-    // Involvement filter HANYA untuk non-admin. Admin bisa lihat semua
-    // dokumen (brief §6.5) — RLS sudah mengizinkan ini (is_admin() di
-    // policy documents_select), jadi query di sini tidak boleh
-    // mempersempitnya lagi lewat filter tambahan.
+  } else if (!isAdmin || scopeMine) {
+    // Involvement filter untuk non-admin, ATAU untuk admin yang membuka
+    // Dokumen Saya. Admin di dashboard default lihat semua (brief §6.5).
     query = query.or(
       `submitter_id.eq.${user.id},ketua_tim_id.eq.${user.id},dalnis_id.eq.${user.id},dalmut_id.eq.${user.id},operator_id.eq.${user.id}`,
     );
@@ -143,7 +170,7 @@ export default async function DashboardPage({
   if (q) query = query.or(`nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`);
 
   const [{ data, count, error }, kpis] = await Promise.all([
-    query.order("created_at", { ascending: false }).range(rangeFrom, rangeTo),
+    query.order(orderColumn, { ascending }).range(rangeFrom, rangeTo),
     getDashboardKpis(supabase, user.id, isAdmin),
   ]);
 
@@ -192,7 +219,7 @@ export default async function DashboardPage({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Dashboard
+            {scopeMine ? "Dokumen Saya" : "Dashboard"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {totalCount} dokumen{hasFilters ? " (terfilter)" : ""}
@@ -232,7 +259,7 @@ export default async function DashboardPage({
         )
       ) : (
         <>
-          <DocumentTable rows={rows} />
+          <DocumentTable rows={rows} activeSort={activeSort} />
           <DocumentPagination page={page} totalPages={totalPages} />
         </>
       )}

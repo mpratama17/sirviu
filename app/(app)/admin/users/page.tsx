@@ -4,19 +4,30 @@ import { getCurrentUser } from "@/lib/supabase/session";
 import { AddUserModal } from "@/components/admin/add-user-modal";
 import { UsersTable } from "@/components/admin/users-table";
 import type { EditableUser } from "@/components/admin/edit-user-modal";
+import { parseSortParams } from "@/lib/utils/sort";
 import type { Role } from "@/lib/types/domain";
 
-export default async function AdminUsersPage() {
+const USERS_SORT_ALLOWED = ["name", "email", "created_at"] as const;
+
+export default async function AdminUsersPage({
+  searchParams,
+}: PageProps<"/admin/users">) {
+  const params = await searchParams;
   const user = await getCurrentUser();
   if (!user || !user.roles.includes("admin")) {
     redirect("/dashboard");
   }
 
+  const activeSort = parseSortParams(params, USERS_SORT_ALLOWED, {
+    column: "name",
+    direction: "asc",
+  });
+
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("users")
     .select("id, name, email, roles, is_active, created_at")
-    .order("name");
+    .order(activeSort.column, { ascending: activeSort.direction === "asc" });
 
   const rows: EditableUser[] = (users ?? []).map((u) => ({
     id: u.id,
@@ -42,7 +53,7 @@ export default async function AdminUsersPage() {
         </div>
         <AddUserModal />
       </div>
-      <UsersTable users={rows} />
+      <UsersTable users={rows} activeSort={activeSort} />
     </div>
   );
 }

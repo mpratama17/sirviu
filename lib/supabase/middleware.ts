@@ -10,6 +10,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register", "/auth/callback", "/auth/magic-callback"];
 
+/**
+ * Path yang boleh diakses user yang sudah authenticated tapi belum memilih
+ * role di onboarding (roles = []). Selain path-path ini, kita tendang ke
+ * `/onboarding/role`.
+ */
+const ONBOARDING_ALLOWED_PATHS = ["/onboarding/role"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -55,6 +62,32 @@ export async function updateSession(request: NextRequest) {
     dashboardUrl.pathname = "/dashboard";
     dashboardUrl.search = "";
     return NextResponse.redirect(dashboardUrl);
+  }
+
+  // Onboarding guard: authenticated user tanpa role apapun harus pilih role
+  // dulu di `/onboarding/role`. Lookup DB kecil per request (indexed by id) —
+  // kita batasi hanya untuk path yang bukan onboarding/public/asset, jadi
+  // tidak menyentuh request static asset.
+  if (
+    isAuthenticated &&
+    !isPublicPath &&
+    !ONBOARDING_ALLOWED_PATHS.includes(pathname)
+  ) {
+    const userId = data?.claims.sub;
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("roles")
+        .eq("id", userId)
+        .maybeSingle();
+      const hasRole = (profile?.roles ?? []).length > 0;
+      if (!hasRole) {
+        const onboardingUrl = request.nextUrl.clone();
+        onboardingUrl.pathname = "/onboarding/role";
+        onboardingUrl.search = "";
+        return NextResponse.redirect(onboardingUrl);
+      }
+    }
   }
 
   return response;

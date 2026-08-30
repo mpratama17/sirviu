@@ -59,6 +59,10 @@ export function buildAuditQuery(
   supabase: SupabaseClient<Database>,
   filters: AuditFilters,
   documentIds: string[] | null,
+  sort: { column: "created_at" | "action"; direction: "asc" | "desc" } = {
+    column: "created_at",
+    direction: "desc",
+  },
 ) {
   let query = supabase.from("stage_transitions").select("*", { count: "exact" });
 
@@ -73,5 +77,5 @@ export function buildAuditQuery(
   if (filters.from) query = query.gte("created_at", filters.from);
   if (filters.to) query = query.lte("created_at", `${filters.to}T23:59:59`);
 
-  return query.order("created_at", { ascending: false });
+  return query.order(sort.column, { ascending: sort.direction === "asc" });
 }

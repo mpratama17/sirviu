@@ -8,9 +8,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { ACTION_LABELS } from "@/lib/constants/stages";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import { cn } from "@/lib/utils";
+import type { SortState } from "@/lib/utils/sort";
 import type { Role } from "@/lib/types/domain";
 
 /** Warna badge per jenis aksi — DESIGN_BRIEF mockup terbaru, biar aksi beda jenis kelihatan sekilas tanpa baca teks. */
@@ -40,16 +42,26 @@ export interface AuditRow {
   isAdminOverride: boolean;
 }
 
-export function AuditTable({ rows }: { rows: readonly AuditRow[] }) {
+export function AuditTable({
+  rows,
+  activeSort,
+}: {
+  rows: readonly AuditRow[];
+  activeSort: SortState;
+}) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Timestamp</TableHead>
+            <TableHead>
+              <SortableHeader column="created_at" label="Timestamp" activeSort={activeSort} />
+            </TableHead>
             <TableHead>Dokumen</TableHead>
             <TableHead>Actor</TableHead>
-            <TableHead>Aksi</TableHead>
+            <TableHead>
+              <SortableHeader column="action" label="Aksi" activeSort={activeSort} />
+            </TableHead>
             <TableHead>Stage</TableHead>
             <TableHead>Komentar</TableHead>
           </TableRow>

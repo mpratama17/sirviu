@@ -311,6 +311,11 @@ export interface Database {
         Args: { p_document_id: string; p_reason: string };
         Returns: string[];
       };
+      // Migration ...20260830000001 — onboarding role picker
+      select_own_initial_role: {
+        Args: { p_role: string };
+        Returns: void;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

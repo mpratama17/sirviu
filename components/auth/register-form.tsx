@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { createClient } from "@/lib/supabase/client";
 import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
 
@@ -81,6 +82,10 @@ export function RegisterForm() {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="register-email">Email</Label>
         <Input id="register-email" type="email" autoComplete="email" {...register("email")} />
+        <p className="text-xs text-muted-foreground">
+          Gunakan email asli (Gmail, dst). Domain internal seperti
+          @sirviu.local hanya bisa didaftarkan Admin dari Manajemen Pengguna.
+        </p>
         {errors.email ? (
           <p role="alert" className="text-sm text-destructive">
             {errors.email.message}
@@ -90,9 +95,8 @@ export function RegisterForm() {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="register-password">Password</Label>
-        <Input
+        <PasswordInput
           id="register-password"
-          type="password"
           autoComplete="new-password"
           {...register("password")}
         />
@@ -105,9 +109,8 @@ export function RegisterForm() {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="register-confirm-password">Konfirmasi Password</Label>
-        <Input
+        <PasswordInput
           id="register-confirm-password"
-          type="password"
           autoComplete="new-password"
           {...register("confirmPassword")}
         />

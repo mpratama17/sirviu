@@ -17,7 +17,9 @@ import { StageBadge } from "@/components/documents/stage-badge";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
 import { DocumentCardList } from "@/components/documents/document-card-list";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import type { SortState } from "@/lib/utils/sort";
 import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
 
 export interface DocumentRow {
@@ -31,7 +33,13 @@ export interface DocumentRow {
   myRole: Role | null;
 }
 
-export function DocumentTable({ rows }: { rows: readonly DocumentRow[] }) {
+export function DocumentTable({
+  rows,
+  activeSort,
+}: {
+  rows: readonly DocumentRow[];
+  activeSort: SortState;
+}) {
   return (
     <>
       <DocumentCardList rows={rows} />
@@ -39,13 +47,23 @@ export function DocumentTable({ rows }: { rows: readonly DocumentRow[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nomor Surat Tugas</TableHead>
-            <TableHead>Nama Laporan</TableHead>
-            <TableHead>Stage Saat Ini</TableHead>
+            <TableHead>
+              <SortableHeader column="nomor_surat_tugas" label="Nomor Surat Tugas" activeSort={activeSort} />
+            </TableHead>
+            <TableHead>
+              <SortableHeader column="nama_laporan" label="Nama Laporan" activeSort={activeSort} />
+            </TableHead>
+            <TableHead>
+              <SortableHeader column="current_stage" label="Stage Saat Ini" activeSort={activeSort} />
+            </TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Hari di Stage</TableHead>
+            <TableHead>
+              <SortableHeader column="days_in_stage" label="Hari di Stage" activeSort={activeSort} />
+            </TableHead>
             <TableHead>Peran Saya</TableHead>
-            <TableHead>Tanggal Upload</TableHead>
+            <TableHead>
+              <SortableHeader column="created_at" label="Tanggal Upload" activeSort={activeSort} />
+            </TableHead>
             <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>

@@ -74,6 +74,9 @@ export default async function ProfilePage() {
                 <span className="text-xs text-text-muted">Belum ada role</span>
               )}
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Untuk mengubah role, hubungi Admin.
+            </p>
           </div>
         </div>
       </div>

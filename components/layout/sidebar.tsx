@@ -1,11 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getVisibleNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { UserMenu } from "@/components/layout/user-menu";
 import type { CurrentUser } from "@/lib/supabase/session";
+
+/**
+ * Aktif kalau pathname sama DAN setiap search param yang ada di
+ * `item.href` cocok di searchParams saat ini. Item tanpa search params
+ * (contoh: Dashboard `/dashboard`) hanya aktif kalau searchParams saat
+ * ini tidak punya `scope` — supaya `/dashboard` (Dashboard) dan
+ * `/dashboard?scope=mine` (Dokumen Saya) tidak keduanya highlight
+ * berbarengan.
+ */
+function isNavItemActive(
+  itemHref: string,
+  pathname: string,
+  searchParams: URLSearchParams,
+): boolean {
+  const [itemPath, itemQuery] = itemHref.split("?");
+  if (itemPath !== pathname) return false;
+  const itemParams = new URLSearchParams(itemQuery ?? "");
+  for (const [key, value] of itemParams.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+  // Item tanpa `scope` di href-nya tidak boleh match kalau searchParams
+  // saat ini punya `scope` — kalau tidak, Dashboard akan ikut aktif saat
+  // Dokumen Saya di-buka.
+  if (!itemParams.has("scope") && searchParams.has("scope")) return false;
+  return true;
+}
 
 function NavLink({
   item,
@@ -44,6 +70,7 @@ export function Sidebar({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { main, admin } = getVisibleNavGroups(user.roles);
 
   return (
@@ -67,7 +94,7 @@ export function Sidebar({
           <NavLink
             key={item.label}
             item={item}
-            isActive={pathname === item.href}
+            isActive={isNavItemActive(item.href, pathname, searchParams)}
             onNavigate={onNavigate}
           />
         ))}
@@ -81,7 +108,7 @@ export function Sidebar({
               <NavLink
                 key={item.label}
                 item={item}
-                isActive={pathname === item.href}
+                isActive={isNavItemActive(item.href, pathname, searchParams)}
                 onNavigate={onNavigate}
               />
             ))}

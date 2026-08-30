@@ -20,7 +20,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard", label: "Dokumen Saya", icon: FolderOpen },
+  { href: "/dashboard?scope=mine", label: "Dokumen Saya", icon: FolderOpen },
   {
     href: "/documents/new",
     label: "Upload Dokumen",

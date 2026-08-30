@@ -45,3 +45,42 @@ export async function updateOwnProfile(formData: FormData): Promise<ActionResult
   revalidatePath("/profile");
   return { success: true, data: undefined };
 }
+
+/**
+ * Onboarding: user baru pilih SATU role kerja (bukan admin) lewat
+ * `/onboarding/role`. Delegasi ke RPC `select_own_initial_role` yang
+ * security-definer sekaligus one-shot guard-nya (raise kalau roles user
+ * sudah tidak kosong). Setelah sukses, revalidate root layout supaya
+ * `getCurrentUser()` di layout ikut refresh dan onboarding guard tidak
+ * ping-pong redirect.
+ */
+const initialRoleSchema = z.object({
+  role: z.enum(["ketua_tim", "dalnis", "dalmut", "operator"], {
+    message: "Pilih salah satu role.",
+  }),
+});
+
+export async function selectInitialRole(
+  formData: FormData,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+
+  const parsed = initialRoleSchema.safeParse({ role: formData.get("role") });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
+  const { error } = await supabase.rpc("select_own_initial_role", {
+    p_role: parsed.data.role,
+  });
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/", "layout");
+  return { success: true, data: undefined };
+}
