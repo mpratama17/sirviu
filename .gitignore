@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Google Cloud OAuth client secret JSON — real credentials, never commit.
+client_secret*.json
+
 # vercel
 .vercel
 
