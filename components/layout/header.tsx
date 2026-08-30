@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
+import {
+  NotificationBell,
+  type NotificationItem,
+} from "@/components/layout/notification-bell";
 
 /**
  * Breadcrumb diturunkan dari NAV_ITEMS berdasarkan path aktif — cukup untuk
@@ -17,7 +21,15 @@ import { NAV_ITEMS } from "@/components/layout/nav-items";
  * Notifikasi masih placeholder — in-app notification masuk Future
  * Enhancement (brief §10), badge sengaja dikosongkan sesuai DESIGN_BRIEF §5.2.
  */
-export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
+export function Header({
+  onMenuClick,
+  notifications,
+  unreadCount,
+}: {
+  onMenuClick?: () => void;
+  notifications: readonly NotificationItem[];
+  unreadCount: number;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -61,14 +73,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         />
       </div>
 
-      <button
-        type="button"
-        aria-label="Notifikasi"
-        disabled
-        className="relative ml-auto shrink-0 rounded-md p-2 text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60 sm:ml-0"
-      >
-        <Bell className="size-5" aria-hidden="true" />
-      </button>
+      <div className="ml-auto sm:ml-0">
+        <NotificationBell items={notifications} unreadCount={unreadCount} />
+      </div>
     </header>
   );
 }

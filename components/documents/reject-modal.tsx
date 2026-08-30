@@ -37,7 +37,7 @@ export function RejectModal({
   onOpenChange,
 }: {
   documentId: string;
-  fromStage: 2 | 4 | 6;
+  fromStage: 2 | 3 | 4;
   validTargets: readonly Stage[];
   open: boolean;
   onOpenChange: (open: boolean) => void;

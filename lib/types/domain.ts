@@ -18,7 +18,7 @@ export const ALL_ROLES: readonly Role[] = [
 ] as const;
 
 /** Nomor tahap alur reviu, 1 sampai 7. Lihat `lib/constants/stages.ts`. */
-export type Stage = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type Stage = 1 | 2 | 3 | 4 | 5;
 
 /** Status keseluruhan dokumen (independen dari nomor stage). */
 export type DocumentStatus =

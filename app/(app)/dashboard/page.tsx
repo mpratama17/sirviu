@@ -62,7 +62,7 @@ async function getDashboardKpis(
     if (doc.status === "in_progress" && isAssignedToCurrentStage(minimal, userId)) {
       needsMyAction++;
     }
-    if ([2, 4, 6].includes(doc.current_stage)) {
+    if ([2, 3, 4].includes(doc.current_stage)) {
       underReview++;
     }
     if (
@@ -92,7 +92,7 @@ function parseStages(param: string | undefined): Stage[] {
   return param
     .split(",")
     .map(Number)
-    .filter((n): n is Stage => n >= 1 && n <= 7);
+    .filter((n): n is Stage => n >= 1 && n <= 5);
 }
 
 /** Buang karakter yang punya arti khusus di syntax filter PostgREST (`,`, `(`, `)`). */

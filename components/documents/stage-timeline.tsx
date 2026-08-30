@@ -31,7 +31,7 @@ function getStageStatus(
     (t) => t.action === "reject" && t.fromStage === stage,
   );
   if (rejectedFromHere) return "revision";
-  if (stage < currentStage || (stage === 7 && status === "finalized")) return "passed";
+  if (stage < currentStage || (stage === 5 && status === "finalized")) return "passed";
   return "untouched";
 }
 
@@ -69,7 +69,7 @@ export function StageTimeline({
         const stageTransitions = transitions.filter(
           (t) => t.toStage === stage || t.fromStage === stage,
         );
-        const isLast = stage === 7;
+        const isLast = stage === 5;
 
         return (
           <li key={stage} className="relative flex gap-3 pb-6 last:pb-0">

@@ -224,6 +224,33 @@ export interface Database {
         >;
         Relationships: [];
       };
+      // Migration ...20260830000003 — in-app notifications
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          document_id: string;
+          stage: number;
+          action: string;
+          message: string;
+          created_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          document_id: string;
+          stage: number;
+          action: string;
+          message: string;
+          created_at?: string;
+          read_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["notifications"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -315,6 +342,26 @@ export interface Database {
       select_own_initial_role: {
         Args: { p_role: string };
         Returns: void;
+      };
+      // Migration ...20260830000003 — workflow 5-stage
+      reviewer_revise_and_forward: {
+        Args: {
+          p_document_id: string;
+          p_file_path: string;
+          p_file_name: string;
+          p_file_size: number;
+          p_mime_type: string;
+          p_comment?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["documents"]["Row"];
+      };
+      mark_notification_read: {
+        Args: { p_notification_id: string };
+        Returns: void;
+      };
+      mark_all_notifications_read: {
+        Args: Record<string, never>;
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

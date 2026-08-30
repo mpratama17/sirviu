@@ -120,10 +120,29 @@ export const canFormatFix = canFinalize;
 
 /** Target stage yang valid untuk reject dari stage saat ini. `[]` bila tidak reviewable. */
 export function getValidRejectTargets(currentStage: Stage): readonly Stage[] {
-  if (currentStage === 2 || currentStage === 4 || currentStage === 6) {
+  if (currentStage === 2 || currentStage === 3 || currentStage === 4) {
     return VALID_REJECT_TARGETS[currentStage];
   }
   return [];
+}
+
+/**
+ * Dalnis (stage 2) atau Dalmut (stage 3) — bisa revisi sendiri (upload
+ * versi baru) lalu forward ke reviewer berikutnya dalam satu aksi.
+ * Pola sama seperti canApprove; RPC `reviewer_revise_and_forward`.
+ * Ditambahkan Aug 2026 saat migrasi ke workflow 5-stage.
+ */
+export function canRevise(
+  doc: MinimalDocument,
+  userId: string,
+  isAdmin = false,
+): boolean {
+  const stage = STAGE_DEFINITIONS[doc.currentStage];
+  return (
+    stage.isReviewStage &&
+    doc.status === "in_progress" &&
+    (isAssignedToCurrentStage(doc, userId) || isAdmin)
+  );
 }
 
 /**

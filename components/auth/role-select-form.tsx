@@ -34,7 +34,7 @@ const OPTIONS: readonly {
     value: "operator",
     label: "Operator",
     description:
-      "Finalisasi dokumen di stage 6/7 setelah lolos reviu berjenjang.",
+      "Finalisasi dokumen di stage akhir setelah lolos reviu berjenjang.",
   },
 ];
 

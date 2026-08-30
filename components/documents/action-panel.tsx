@@ -9,16 +9,18 @@ import { ApproveModal } from "@/components/documents/approve-modal";
 import { RejectModal } from "@/components/documents/reject-modal";
 import { FormatFixModal } from "@/components/documents/format-fix-modal";
 import { UploadRevisionModal } from "@/components/documents/upload-revision-modal";
+import { ReviseAndForwardModal } from "@/components/documents/revise-and-forward-modal";
 import { submitDocument, finalizeDocument } from "@/lib/actions/reviews";
 import {
   canApprove,
   canFinalize,
+  canRevise,
   canSubmit,
   canUploadRevision,
   getValidRejectTargets,
 } from "@/lib/utils/permissions";
 import { STAGE_DEFINITIONS } from "@/lib/constants/stages";
-import type { MinimalDocument } from "@/lib/types/domain";
+import type { MinimalDocument, Stage } from "@/lib/types/domain";
 
 export function ActionPanel({
   doc,
@@ -50,11 +52,12 @@ export function ActionPanel({
   const [rejectOpen, setRejectOpen] = useState(false);
   const [formatFixOpen, setFormatFixOpen] = useState(false);
   const [uploadRevisionOpen, setUploadRevisionOpen] = useState(false);
+  const [reviseOpen, setReviseOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const nextStageName =
-    doc.currentStage < 7
-      ? STAGE_DEFINITIONS[(doc.currentStage + 1) as 2 | 3 | 4 | 5 | 6 | 7].name
+    doc.currentStage < 5
+      ? STAGE_DEFINITIONS[(doc.currentStage + 1) as Stage].name
       : "";
 
   function handleSubmit() {
@@ -142,15 +145,26 @@ export function ActionPanel({
     );
   }
 
-  // Dalnis (stage 2) / Dalmut (stage 4) → approve / reject.
+  // Dalnis (stage 2) / Dalmut (stage 3) → approve / revisi lalu forward / reject.
   if (canApprove(doc, currentUserId, isAdmin)) {
+    const canReviseThis = canRevise(doc, currentUserId, isAdmin);
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
         {overrideNote}
         <Button className="w-full" onClick={() => setApproveOpen(true)}>
-          Approve — Lanjut ke Stage Berikutnya
+          Approve — Lanjut ke {nextStageName}
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => setRejectOpen(true)}>
+        {canReviseThis ? (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setReviseOpen(true)}
+            title="Upload versi baru hasil koreksi Anda, lalu langsung teruskan ke reviewer berikutnya"
+          >
+            Revisi &amp; Teruskan
+          </Button>
+        ) : null}
+        <Button variant="ghost" className="w-full text-destructive" onClick={() => setRejectOpen(true)}>
           Kembalikan untuk Revisi
         </Button>
         <ApproveModal
@@ -161,16 +175,22 @@ export function ActionPanel({
         />
         <RejectModal
           documentId={doc.id}
-          fromStage={doc.currentStage as 2 | 4 | 6}
+          fromStage={doc.currentStage as 2 | 3 | 4}
           validTargets={getValidRejectTargets(doc.currentStage)}
           open={rejectOpen}
           onOpenChange={setRejectOpen}
+        />
+        <ReviseAndForwardModal
+          documentId={doc.id}
+          nextStageName={nextStageName}
+          open={reviseOpen}
+          onOpenChange={setReviseOpen}
         />
       </div>
     );
   }
 
-  // Operator di stage 6 → finalize / format fix / reject.
+  // Operator di stage 4 → finalize / format fix / reject.
   if (canFinalize(doc, currentUserId, isAdmin)) {
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
@@ -185,7 +205,7 @@ export function ActionPanel({
           onClick={() => setFormatFixOpen(true)}
           title="Upload versi hasil perbaikan format Anda, lalu finalize"
         >
-          Format Fix & Finalize
+          Format Fix &amp; Finalize
         </Button>
         <Button
           variant="ghost"
@@ -196,8 +216,8 @@ export function ActionPanel({
         </Button>
         <RejectModal
           documentId={doc.id}
-          fromStage={6}
-          validTargets={getValidRejectTargets(6)}
+          fromStage={4}
+          validTargets={getValidRejectTargets(4)}
           open={rejectOpen}
           onOpenChange={setRejectOpen}
         />

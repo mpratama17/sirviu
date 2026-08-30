@@ -160,3 +160,70 @@ export async function formatFixAndFinalize(
   revalidateDocument(documentId);
   return { success: true, data: undefined };
 }
+
+/**
+ * Reviewer Revise & Forward — Dalnis (stage 2) atau Dalmut (stage 3)
+ * upload versi baru hasil koreksi + langsung maju ke reviewer berikutnya.
+ * Konsisten dengan pola formatFixAndFinalize: upload storage dulu (admin
+ * client), lalu panggil RPC. Ditambahkan Aug 2026 saat migrasi workflow
+ * 5-stage — sebelumnya reviewer harus reject balik ke KT untuk revisi
+ * kecil.
+ */
+export async function reviewerReviseAndForward(
+  documentId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return { success: false, error: "Sesi Anda berakhir. Silakan login ulang." };
+  }
+
+  const file = formData.get("file");
+  const fileCheck = validateUploadFile(file instanceof File ? file : null);
+  if (!fileCheck.valid) {
+    return { success: false, error: fileCheck.error };
+  }
+  const uploadedFile = file as File;
+  const comment = (formData.get("comment") as string | null)?.trim() || null;
+
+  const admin = createAdminClient();
+  const { count: versionCount } = await admin
+    .from("document_versions")
+    .select("id", { count: "exact", head: true })
+    .eq("document_id", documentId);
+  const nextVersion = (versionCount ?? 0) + 1;
+
+  const sanitizedFileName = uploadedFile.name.replace(/[^\w.\-]+/g, "_");
+  const filePath = `${documentId}/v${nextVersion}/${sanitizedFileName}`;
+
+  const { error: uploadError } = await admin.storage
+    .from("documents")
+    .upload(filePath, uploadedFile, {
+      contentType: uploadedFile.type,
+      upsert: false,
+    });
+  if (uploadError) {
+    return { success: false, error: `Gagal upload file: ${uploadError.message}` };
+  }
+
+  const { error: rpcError } = await supabase.rpc("reviewer_revise_and_forward", {
+    p_document_id: documentId,
+    p_file_path: filePath,
+    p_file_name: uploadedFile.name,
+    p_file_size: uploadedFile.size,
+    p_mime_type: uploadedFile.type,
+    p_comment: comment,
+  });
+
+  if (rpcError) {
+    await admin.storage.from("documents").remove([filePath]);
+    return { success: false, error: rpcError.message };
+  }
+
+  revalidateDocument(documentId);
+  return { success: true, data: undefined };
+}

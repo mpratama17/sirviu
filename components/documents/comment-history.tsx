@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { STAGE_DEFINITIONS } from "@/lib/constants/stages";
+import type { Stage } from "@/lib/types/domain";
 import type { TimelineTransition } from "@/components/documents/stage-timeline";
 
 function initials(name: string): string {
@@ -53,7 +54,7 @@ export function CommentHistory({
                   </span>
                 </p>
                 <p className="text-xs text-text-muted">
-                  Dari Stage {t.fromStage}: {t.fromStage ? STAGE_DEFINITIONS[t.fromStage as 1|2|3|4|5|6|7].name : ""}
+                  Dari Stage {t.fromStage}: {t.fromStage ? STAGE_DEFINITIONS[t.fromStage as Stage].name : ""}
                   {t.versionNumber ? ` · v${t.versionNumber}` : ""}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{t.comment}</p>

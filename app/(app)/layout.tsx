@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
 import { AppShell } from "@/components/layout/app-shell";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
+import type { NotificationItem } from "@/components/layout/notification-bell";
 
 /**
  * Layout untuk semua halaman setelah login. `proxy.ts` sudah menjamin kita
@@ -43,5 +45,31 @@ export default async function AppLayout({
     );
   }
 
-  return <AppShell user={user}>{children}</AppShell>;
+  // Fetch notifikasi terkini + unread count untuk lonceng di header.
+  // RLS `notifications_select` sudah membatasi ke `user_id = auth.uid()`.
+  const supabase = await createClient();
+  const [{ data: recent }, { count: unread }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id, document_id, message, created_at, read_at")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .is("read_at", null),
+  ]);
+  const notifications: NotificationItem[] = (recent ?? []).map((n) => ({
+    id: n.id,
+    documentId: n.document_id,
+    message: n.message,
+    createdAt: n.created_at,
+    readAt: n.read_at,
+  }));
+
+  return (
+    <AppShell user={user} notifications={notifications} unreadCount={unread ?? 0}>
+      {children}
+    </AppShell>
+  );
 }

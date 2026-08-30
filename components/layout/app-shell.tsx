@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import type { NotificationItem } from "@/components/layout/notification-bell";
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/supabase/session";
 
@@ -14,9 +15,13 @@ import type { CurrentUser } from "@/lib/supabase/session";
  */
 export function AppShell({
   user,
+  notifications,
+  unreadCount,
   children,
 }: {
   user: CurrentUser;
+  notifications: readonly NotificationItem[];
+  unreadCount: number;
   children: ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,7 +46,11 @@ export function AppShell({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header onMenuClick={() => setMobileOpen(true)} />
+        <Header
+          onMenuClick={() => setMobileOpen(true)}
+          notifications={notifications}
+          unreadCount={unreadCount}
+        />
         <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6">{children}</main>
       </div>
     </div>
