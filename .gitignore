@@ -52,3 +52,15 @@ supabase/.temp
 # Playwright CLI session artifacts (screenshots/snapshots/logs from ad-hoc
 # browser verification, not test fixtures)
 .playwright-cli/
+
+# claude.ai/design exports — personal design-reference material, not
+# application source. Large (HTML bundle + zip) and not needed to build/run
+# the app; the actual UI decisions from these are already implemented.
+SIRVIU.html
+/SIRVIU Aplikasi UI Lengkap/
+/SIRVIU Aplikasi UI Lengkap.zip
+Design.pdf
+
+# Third-party AI-tooling config, not part of this project's source.
+.ngodingpakeai/
+.ngodingpakeaiignore
