@@ -104,7 +104,7 @@ export function RejectModal({
               id="reject-comment"
               value={comment}
               onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX))}
-              rows={4}
+              rows={10}
               aria-invalid={!!error}
               aria-describedby="reject-comment-count"
             />

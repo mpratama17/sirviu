@@ -60,7 +60,7 @@ export function ApproveModal({
           placeholder="Catatan (opsional)"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          rows={3}
+          rows={8}
         />
 
         <DialogFooter>

@@ -10,10 +10,14 @@ export default async function NewDocumentPage() {
     redirect("/dashboard");
   }
 
+  // Isolasi tim (masukan user setelah testing, lihat AGENTS.md) — Ketua Tim
+  // cuma boleh assign dari anggota timnya sendiri, bukan siapa saja di org.
+  // Ditegakkan lagi di RPC create_document, halaman ini cuma UI.
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("users")
     .select("id, name, email, roles, is_active")
+    .eq("team_ketua_tim_id", user.id)
     .order("name");
 
   const selectableUsers: SelectableUser[] = (users ?? []).map((u) => ({
@@ -32,7 +36,11 @@ export default async function NewDocumentPage() {
       <p className="mb-4 text-sm text-muted-foreground">
         Isi nomor surat tugas seperti tertera di dokumen fisik.
       </p>
-      <DocumentForm users={selectableUsers} currentUserId={user.id} />
+      <DocumentForm
+        users={selectableUsers}
+        currentUserId={user.id}
+        currentUserName={user.name}
+      />
     </div>
   );
 }
