@@ -91,6 +91,11 @@ flowchart LR
 - **Sortable, filterable tables** everywhere data lives — dashboard, user
   management, audit trail — state kept in the URL so views are shareable and
   refresh-safe.
+- **Multi-team workspace isolation** — the app serves several Ketua Tim in
+  parallel, each with their own Dalnis/Dalmut/Operator; one team's documents,
+  including finalized ones, are invisible to another team, enforced in RLS
+  policies and RPCs (not just filtered in the UI). Admin sees every team and
+  can manage any team's roster from one panel.
 
 ---
 
@@ -118,10 +123,15 @@ flowchart LR
   caught during testing was exactly this gap: a reviewer-assignment rule that
   only lived in a dropdown's `disabled` prop, not in the RPC that actually
   wrote the row.
-- **11 migrations, each one a real fix or a real feature**, not a rebase —
+- **14 migrations, each one a real fix or a real feature**, not a rebase —
   including a workflow redesign (7-stage → 5-stage) driven by actual user
   feedback after a pilot test, done with a full data-remap migration *and* a
-  written, tested rollback script kept in the repo (`supabase/rollbacks/`).
+  written, tested rollback script kept in the repo (`supabase/rollbacks/`);
+  and a multi-team isolation rollout that itself needed a follow-up
+  migration once end-to-end testing (simulated sessions run directly against
+  the live database) turned up two real authorization gaps — one where a
+  security check trusted a client-supplied ID instead of deriving it from
+  the caller.
 
 ---
 
