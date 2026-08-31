@@ -34,9 +34,12 @@ function SectionTitle({ n, children }: { n: number; children: ReactNode }) {
 export function DocumentForm({
   users,
   currentUserId,
+  currentUserName,
 }: {
+  /** Anggota tim Anda saja (dalnis/dalmut/operator) — isolasi tim, lihat AGENTS.md. */
   users: readonly SelectableUser[];
   currentUserId: string;
+  currentUserName: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -144,24 +147,8 @@ export function DocumentForm({
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label>Ketua Tim</Label>
-            <Controller
-              control={control}
-              name="ketuaTimId"
-              render={({ field }) => (
-                <UserCombobox
-                  users={users}
-                  role="ketua_tim"
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabledIds={selectedReviewers}
-                />
-              )}
-            />
-            {errors.ketuaTimId ? (
-              <p role="alert" className="text-sm text-destructive">
-                {errors.ketuaTimId.message}
-              </p>
-            ) : null}
+            <Input value={currentUserName} disabled readOnly />
+            <input type="hidden" {...register("ketuaTimId")} />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -176,6 +163,11 @@ export function DocumentForm({
                   value={field.value}
                   onChange={field.onChange}
                   disabledIds={selectedReviewers}
+                  placeholder={
+                    users.some((u) => u.roles.includes("dalnis"))
+                      ? undefined
+                      : "Belum ada anggota — tambahkan di Tim Saya"
+                  }
                 />
               )}
             />
@@ -198,6 +190,11 @@ export function DocumentForm({
                   value={field.value}
                   onChange={field.onChange}
                   disabledIds={selectedReviewers}
+                  placeholder={
+                    users.some((u) => u.roles.includes("dalmut"))
+                      ? undefined
+                      : "Belum ada anggota — tambahkan di Tim Saya"
+                  }
                 />
               )}
             />
@@ -220,6 +217,11 @@ export function DocumentForm({
                   value={field.value}
                   onChange={field.onChange}
                   disabledIds={selectedReviewers}
+                  placeholder={
+                    users.some((u) => u.roles.includes("operator"))
+                      ? undefined
+                      : "Belum ada anggota — tambahkan di Tim Saya"
+                  }
                 />
               )}
             />

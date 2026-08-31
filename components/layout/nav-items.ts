@@ -8,7 +8,7 @@
  * nanti ternyata butuh dua page yang benar-benar beda.
  */
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, FolderOpen, Upload, Users, ScrollText } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Upload, Users, ScrollText, UsersRound } from "lucide-react";
 import type { Role } from "@/lib/types/domain";
 
 export interface NavItem {
@@ -25,6 +25,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: "/documents/new",
     label: "Upload Dokumen",
     icon: Upload,
+    requiredRole: "ketua_tim",
+  },
+  {
+    href: "/team",
+    label: "Tim Saya",
+    icon: UsersRound,
     requiredRole: "ketua_tim",
   },
   {

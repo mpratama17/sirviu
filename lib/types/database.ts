@@ -39,6 +39,9 @@ export interface Database {
           roles: string[];
           is_active: boolean;
           created_at: string;
+          // Migration ...20260831000001 — tim (ketua_tim) tempat dalnis/dalmut/
+          // operator ini jadi anggota. Null = belum diassign ke tim manapun.
+          team_ketua_tim_id: string | null;
         };
         Insert: {
           id: string;
@@ -47,6 +50,7 @@ export interface Database {
           roles?: string[];
           is_active?: boolean;
           created_at?: string;
+          team_ketua_tim_id?: string | null;
         };
         Update: {
           id?: string;
@@ -55,6 +59,7 @@ export interface Database {
           roles?: string[];
           is_active?: boolean;
           created_at?: string;
+          team_ketua_tim_id?: string | null;
         };
         Relationships: [];
       };
@@ -362,6 +367,19 @@ export interface Database {
       mark_all_notifications_read: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      // Migration ...20260831000001 — isolasi tim
+      my_team_id: {
+        Args: { p_user_id: string };
+        Returns: string;
+      };
+      assign_team_member: {
+        Args: { p_member_id: string };
+        Returns: void;
+      };
+      remove_team_member: {
+        Args: { p_member_id: string };
+        Returns: void;
       };
     };
     Enums: Record<string, never>;
