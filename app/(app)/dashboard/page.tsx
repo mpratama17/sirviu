@@ -3,10 +3,16 @@ import { FolderOpen, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
-import { getUserRoleOnDocument, isAssignedToCurrentStage } from "@/lib/utils/permissions";
+import {
+  getUserRoleOnDocument,
+  isAssignedToCurrentStage,
+} from "@/lib/utils/permissions";
 import { daysSince } from "@/lib/utils/dates";
 import { DocumentFilters } from "@/components/documents/document-filters";
-import { DocumentTable, type DocumentRow } from "@/components/documents/document-table";
+import {
+  DocumentTable,
+  type DocumentRow,
+} from "@/components/documents/document-table";
 import { DocumentPagination } from "@/components/documents/pagination";
 import { EmptyState } from "@/components/documents/empty-state";
 import { KpiCards, type DashboardKpis } from "@/components/documents/kpi-cards";
@@ -59,7 +65,10 @@ async function getDashboardKpis(
       status: doc.status as DocumentStatus,
     };
 
-    if (doc.status === "in_progress" && isAssignedToCurrentStage(minimal, userId)) {
+    if (
+      doc.status === "in_progress" &&
+      isAssignedToCurrentStage(minimal, userId)
+    ) {
       needsMyAction++;
     }
     if ([2, 3, 4].includes(doc.current_stage)) {
@@ -108,8 +117,11 @@ export default async function DashboardPage({
   if (!user) return null; // ditangani AppLayout
 
   const q = typeof params.q === "string" ? sanitizeSearchTerm(params.q) : "";
-  const stages = parseStages(typeof params.stage === "string" ? params.stage : undefined);
-  const status = typeof params.status === "string" ? (params.status as DocumentStatus) : "";
+  const stages = parseStages(
+    typeof params.stage === "string" ? params.stage : undefined,
+  );
+  const status =
+    typeof params.status === "string" ? (params.status as DocumentStatus) : "";
   const peran = typeof params.peran === "string" ? (params.peran as Role) : "";
   const from = typeof params.from === "string" ? params.from : "";
   const to = typeof params.to === "string" ? params.to : "";
@@ -167,7 +179,10 @@ export default async function DashboardPage({
   if (status) query = query.eq("status", status);
   if (from) query = query.gte("created_at", from);
   if (to) query = query.lte("created_at", `${to}T23:59:59`);
-  if (q) query = query.or(`nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`);
+  if (q)
+    query = query.or(
+      `nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`,
+    );
 
   const [{ data, count, error }, kpis] = await Promise.all([
     query.order(orderColumn, { ascending }).range(rangeFrom, rangeTo),

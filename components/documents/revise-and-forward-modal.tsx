@@ -67,7 +67,7 @@ export function ReviseAndForwardModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Revisi &amp; Teruskan</DialogTitle>
           <DialogDescription>
@@ -85,7 +85,12 @@ export function ReviseAndForwardModal({
               id="revise-comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={3}
+              // `rows` tidak berpengaruh: Textarea pakai `field-sizing-content`
+              // (components/ui/textarea.tsx), jadi tinggi ikut isi dan hanya
+              // min/max-height yang menentukan. Catatan reviu di kasus nyata
+              // panjang — mulai lega, lalu scroll sendiri, bukan mendorong
+              // dialog melewati layar.
+              className="min-h-48 max-h-[45vh]"
               placeholder="Ringkas apa yang Anda perbaiki, biar reviewer berikutnya tahu."
             />
           </div>
