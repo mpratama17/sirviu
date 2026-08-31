@@ -60,7 +60,7 @@ export function FormatFixModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Format Fix & Finalize</DialogTitle>
           <DialogDescription>
@@ -77,7 +77,7 @@ export function FormatFixModal({
               id="format-fix-comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={3}
+              className="min-h-48 max-h-[45vh]"
             />
           </div>
         </div>

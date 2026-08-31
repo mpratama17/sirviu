@@ -48,7 +48,7 @@ export function ApproveModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Approve Dokumen</DialogTitle>
           <DialogDescription>
@@ -60,7 +60,7 @@ export function ApproveModal({
           placeholder="Catatan (opsional)"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          rows={8}
+          className="min-h-48 max-h-[45vh]"
         />
 
         <DialogFooter>

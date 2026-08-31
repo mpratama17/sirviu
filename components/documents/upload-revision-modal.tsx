@@ -60,7 +60,7 @@ export function UploadRevisionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Upload Versi Baru</DialogTitle>
           <DialogDescription>
@@ -77,7 +77,7 @@ export function UploadRevisionModal({
               id="revision-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={3}
+              className="min-h-48 max-h-[45vh]"
               placeholder="Ringkasan perubahan yang dilakukan (opsional)"
             />
           </div>

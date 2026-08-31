@@ -73,7 +73,7 @@ export function RejectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Kembalikan untuk Revisi</DialogTitle>
         </DialogHeader>
@@ -104,7 +104,7 @@ export function RejectModal({
               id="reject-comment"
               value={comment}
               onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX))}
-              rows={10}
+              className="min-h-48 max-h-[45vh]"
               aria-invalid={!!error}
               aria-describedby="reject-comment-count"
             />

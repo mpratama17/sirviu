@@ -250,7 +250,7 @@ export function DocumentForm({
         <CardContent>
           <Textarea
             placeholder="Catatan untuk reviewer (opsional)"
-            rows={4}
+            className="min-h-48 max-h-[45vh]"
             {...register("uploadNotes")}
           />
         </CardContent>
