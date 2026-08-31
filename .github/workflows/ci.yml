@@ -1,0 +1,53 @@
+name: CI
+
+# Gate for merging into main — see branch protection settings on this repo.
+# Runs on every PR and on pushes to main (the merge commit itself), so a
+# broken main is caught even if someone bypasses the PR flow as admin.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same PR/branch — no point finishing a CI
+# run for a commit that's already been replaced by a newer push.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.20.0"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+        env:
+          # Placeholder values — `next build` only needs these present (most
+          # routes are server-rendered on demand, not statically generated
+          # against a real Supabase connection). Never point CI at the real
+          # project; a broken PR build must not be able to touch production
+          # data even accidentally.
+          NEXT_PUBLIC_SUPABASE_URL: "https://ci-placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci_placeholder"
+          SUPABASE_SERVICE_ROLE_KEY: "sb_secret_ci_placeholder"
