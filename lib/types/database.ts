@@ -374,7 +374,7 @@ export interface Database {
         Returns: string;
       };
       assign_team_member: {
-        Args: { p_member_id: string };
+        Args: { p_member_id: string; p_ketua_tim_id?: string };
         Returns: void;
       };
       remove_team_member: {

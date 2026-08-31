@@ -15,7 +15,13 @@ import type { DocumentRow } from "@/components/documents/document-table";
  * lewat automated check, bukan dugaan). Card jadi <div> + onClick
  * (navigasi lewat router), tombol download tetap <a> asli.
  */
-export function DocumentCardList({ rows }: { rows: readonly DocumentRow[] }) {
+export function DocumentCardList({
+  rows,
+  showTeam = false,
+}: {
+  rows: readonly DocumentRow[];
+  showTeam?: boolean;
+}) {
   const router = useRouter();
 
   return (
@@ -37,6 +43,11 @@ export function DocumentCardList({ rows }: { rows: readonly DocumentRow[] }) {
                 {row.nomorSuratTugas}
               </p>
               <p className="truncate text-sm text-muted-foreground">{row.namaLaporan}</p>
+              {showTeam ? (
+                <p className="truncate text-xs text-text-muted">
+                  Tim {row.teamName ?? "-"}
+                </p>
+              ) : null}
             </div>
             <a
               href={`/documents/${row.id}/download`}

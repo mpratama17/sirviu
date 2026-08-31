@@ -202,6 +202,20 @@ export default async function DashboardPage({
     );
   }
 
+  // Kolom "Tim" cuma untuk admin — peran lain sudah pasti lihat timnya
+  // sendiri saja (RLS + involvement filter), jadi kolomnya mubazir di sana.
+  // Lookup terpisah `id -> name` seperti di /admin/audit; repo ini tidak
+  // memakai embed PostgREST di manapun.
+  const teamNames = new Map<string, string>();
+  if (isAdmin && data && data.length > 0) {
+    const ketuaTimIds = [...new Set(data.map((doc) => doc.ketua_tim_id))];
+    const { data: ketuaTims } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", ketuaTimIds);
+    for (const kt of ketuaTims ?? []) teamNames.set(kt.id, kt.name);
+  }
+
   const rows: DocumentRow[] = (data ?? []).map((doc) => ({
     id: doc.id,
     nomorSuratTugas: doc.nomor_surat_tugas,
@@ -223,6 +237,7 @@ export default async function DashboardPage({
       },
       user.id,
     ),
+    teamName: teamNames.get(doc.ketua_tim_id),
   }));
 
   const totalCount = count ?? 0;
@@ -274,7 +289,7 @@ export default async function DashboardPage({
         )
       ) : (
         <>
-          <DocumentTable rows={rows} activeSort={activeSort} />
+          <DocumentTable rows={rows} activeSort={activeSort} showTeam={isAdmin} />
           <DocumentPagination page={page} totalPages={totalPages} />
         </>
       )}

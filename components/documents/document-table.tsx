@@ -31,18 +31,23 @@ export interface DocumentRow {
   daysInStage: number;
   createdAt: string;
   myRole: Role | null;
+  /** Nama Ketua Tim pemilik dokumen — hanya diisi untuk admin (lihat dashboard). */
+  teamName?: string;
 }
 
 export function DocumentTable({
   rows,
   activeSort,
+  showTeam = false,
 }: {
   rows: readonly DocumentRow[];
   activeSort: SortState;
+  /** Kolom "Tim" cuma relevan buat admin: peran lain selalu lihat timnya sendiri. */
+  showTeam?: boolean;
 }) {
   return (
     <>
-      <DocumentCardList rows={rows} />
+      <DocumentCardList rows={rows} showTeam={showTeam} />
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
       <Table>
         <TableHeader>
@@ -53,6 +58,9 @@ export function DocumentTable({
             <TableHead>
               <SortableHeader column="nama_laporan" label="Nama Laporan" activeSort={activeSort} />
             </TableHead>
+            {/* Bukan kolom DB (nama Ketua Tim ada di tabel users), jadi
+                sengaja TIDAK sortable — `order=tim` akan ditolak PostgREST. */}
+            {showTeam ? <TableHead>Tim</TableHead> : null}
             <TableHead>
               <SortableHeader column="current_stage" label="Stage Saat Ini" activeSort={activeSort} />
             </TableHead>
@@ -78,6 +86,11 @@ export function DocumentTable({
               <TableCell className="max-w-64 truncate" title={row.namaLaporan}>
                 {row.namaLaporan}
               </TableCell>
+              {showTeam ? (
+                <TableCell className="max-w-40 truncate" title={row.teamName}>
+                  {row.teamName ?? "-"}
+                </TableCell>
+              ) : null}
               <TableCell>
                 <StageBadge stage={row.currentStage} />
               </TableCell>
