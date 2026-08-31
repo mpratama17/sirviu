@@ -34,6 +34,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # `PageProps`/`LayoutProps` etc. are ambient types Next.js generates
+      # into .next/types — they don't exist on a fresh checkout until
+      # something creates them. `next dev`/`next build` do this as a side
+      # effect locally, which is why `pnpm typecheck` always worked on a
+      # machine that had already run the app once. CI starts clean, so
+      # generate them explicitly first.
+      - name: Generate Next.js types
+        run: pnpm exec next typegen
+
       - name: Typecheck
         run: pnpm typecheck
 
