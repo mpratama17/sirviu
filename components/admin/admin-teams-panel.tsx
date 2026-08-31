@@ -78,9 +78,11 @@ export function AdminTeamsPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 md:grid-cols-2">
+      {/* `self-start`: tanpa ini kartu tim kosong ikut meregang setinggi
+          kartu tetangganya di baris grid yang sama — ruang kosong menganga. */}
+      <div className="grid items-start gap-3 md:grid-cols-2">
         {teams.map((team) => (
-          <Card key={team.ketuaTim.id}>
+          <Card key={team.ketuaTim.id} className="self-start">
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-2">

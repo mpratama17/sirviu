@@ -43,6 +43,7 @@ export async function addTeamMember(
     if (error) return { success: false, error: error.message };
 
     revalidatePath("/admin/users");
+    revalidatePath("/team"); // roster KT yang diedit admin jangan basi
     return { success: true, data: undefined };
   }
 
