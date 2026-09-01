@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { selectInitialRole } from "@/lib/actions/profile";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 
 const OPTIONS: readonly {
   value: "ketua_tim" | "dalnis" | "dalmut" | "operator";
@@ -26,7 +27,7 @@ const OPTIONS: readonly {
   },
   {
     value: "dalmut",
-    label: "Pengendali Mutu",
+    label: ROLE_LABELS.dalmut,
     description:
       "Mereviu dokumen di stage 4, menyetujui atau mengembalikan untuk revisi.",
   },

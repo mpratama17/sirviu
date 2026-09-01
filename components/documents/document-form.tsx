@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserCombobox, type SelectableUser } from "@/components/documents/user-combobox";
 import { FileDropzone } from "@/components/documents/file-dropzone";
 import { createDocument } from "@/lib/actions/documents";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import {
   documentMetadataSchema,
   type DocumentMetadataInput,
@@ -179,7 +180,7 @@ export function DocumentForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Pengendali Mutu (Dalmut)</Label>
+            <Label>{ROLE_LABELS.dalmut}</Label>
             <Controller
               control={control}
               name="dalmutId"

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox, type SelectableUser } from "@/components/documents/user-combobox";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import {
   editDocumentMetadataSchema,
   type EditDocumentMetadataInput,
@@ -182,7 +183,7 @@ export function EditDocumentModal({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Pengendali Mutu (Dalmut)</Label>
+                <Label>{ROLE_LABELS.dalmut}</Label>
                 <Controller
                   control={control}
                   name="dalmutId"
