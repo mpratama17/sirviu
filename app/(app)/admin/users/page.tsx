@@ -8,6 +8,7 @@ import type { SelectableUser } from "@/components/documents/user-combobox";
 import type { EditableUser } from "@/components/admin/edit-user-modal";
 import { parseSortParams } from "@/lib/utils/sort";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import { isAssignableTeamCandidate } from "@/lib/utils/team";
 import type { Role } from "@/lib/types/domain";
 
 const USERS_SORT_ALLOWED = ["name", "email", "created_at"] as const;
@@ -69,13 +70,12 @@ export default async function AdminUsersPage({
     }));
 
   const unassigned = allUsers
-    .filter(
-      (u) =>
-        u.is_active &&
-        u.team_ketua_tim_id === null &&
-        !u.roles.includes("ketua_tim") &&
-        !u.roles.includes("admin") &&
-        u.roles.some((r) => ["dalnis", "dalmut", "operator"].includes(r)),
+    .filter((u) =>
+      isAssignableTeamCandidate({
+        isActive: u.is_active,
+        teamKetuaTimId: u.team_ketua_tim_id,
+        roles: u.roles,
+      }),
     )
     .map(toSelectable)
     .sort(byName);

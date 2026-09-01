@@ -231,7 +231,7 @@ export function EditDocumentModal({
               <Label htmlFor="edit-reason">Alasan Perubahan (opsional)</Label>
               <Textarea
                 id="edit-reason"
-                rows={2}
+                className="min-h-24 max-h-[35vh]"
                 placeholder="Contoh: salah ketik nomor surat tugas, Dalnis sedang cuti..."
                 {...register("reason")}
               />

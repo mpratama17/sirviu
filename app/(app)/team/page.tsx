@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/supabase/session";
 import { TeamManager } from "@/components/team/team-manager";
 import type { SelectableUser } from "@/components/documents/user-combobox";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import { isAssignableTeamCandidate } from "@/lib/utils/team";
 
 /**
  * Anggota tim (Ketua Tim ↔ dalnis/dalmut/operator) — masukan user setelah
@@ -34,13 +35,12 @@ export default async function TeamPage() {
   const rows = users ?? [];
   const members = rows.filter((u) => u.team_ketua_tim_id === user.id).map(toSelectable);
   const available = rows
-    .filter(
-      (u) =>
-        u.is_active &&
-        u.team_ketua_tim_id === null &&
-        !u.roles.includes("ketua_tim") &&
-        !u.roles.includes("admin") &&
-        u.roles.some((r) => ["dalnis", "dalmut", "operator"].includes(r)),
+    .filter((u) =>
+      isAssignableTeamCandidate({
+        isActive: u.is_active,
+        teamKetuaTimId: u.team_ketua_tim_id,
+        roles: u.roles,
+      }),
     )
     .map(toSelectable);
 

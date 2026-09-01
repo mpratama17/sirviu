@@ -84,7 +84,7 @@ export function AdminDeleteButton({ documentId }: { documentId: string }) {
               id="admin-delete-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              rows={3}
+              className="min-h-24 max-h-[35vh]"
               maxLength={REASON_MAX}
               placeholder="Contoh: dokumen duplikat, salah upload, diminta dibatalkan oleh..."
             />
