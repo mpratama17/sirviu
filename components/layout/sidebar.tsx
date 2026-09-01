@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -76,9 +77,17 @@ export function Sidebar({
   return (
     <aside className="flex h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex items-center gap-2.5 border-b border-sidebar-border px-4 py-3">
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-          S
-        </div>
+        {/* Lambang resmi (permintaan user) — portrait 319x480, jauh lebih
+            tinggi dari lebar, jadi slotnya bukan lagi kotak seperti monogram
+            "S" sebelumnya. */}
+        <Image
+          src="/logo-sirviu.png"
+          alt="Lambang Irban III"
+          width={29}
+          height={44}
+          className="h-11 w-auto shrink-0"
+          priority
+        />
         <div className="min-w-0 leading-none">
           <div className="text-sm font-bold tracking-tight text-sidebar-foreground">
             SIRVIU
