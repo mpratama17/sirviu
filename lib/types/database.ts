@@ -185,6 +185,35 @@ export interface Database {
         >;
         Relationships: [];
       };
+      // Migration 20260901000002 — audit trail perubahan roster tim
+      // (assign/remove), terpisah dari stage_transitions karena bukan
+      // event alur dokumen. Pola sama dengan document_edit_log di atas.
+      team_membership_log: {
+        Row: {
+          id: string;
+          member_id: string;
+          actor_id: string;
+          action: string;
+          from_team_id: string | null;
+          to_team_id: string | null;
+          actor_is_override: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          member_id: string;
+          actor_id: string;
+          action: string;
+          from_team_id?: string | null;
+          to_team_id?: string | null;
+          actor_is_override?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["team_membership_log"]["Insert"]
+        >;
+        Relationships: [];
+      };
       // Migration ...000007 — snapshot yang selamat dari admin_delete_document
       // (hard delete). Sengaja tidak reference public.documents (tidak ikut cascade).
       deleted_documents_log: {
