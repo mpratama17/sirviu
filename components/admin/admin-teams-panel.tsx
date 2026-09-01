@@ -121,7 +121,12 @@ export function AdminTeamsPanel({
                       className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-1.5"
                     >
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm">{m.name}</span>
+                        <span className="flex items-center gap-1.5 truncate text-sm">
+                          {m.name}
+                          {m.isActive ? null : (
+                            <Badge variant="outline">Nonaktif</Badge>
+                          )}
+                        </span>
                         <span className="truncate text-xs text-text-muted">
                           {memberRoleLabel(m)} · {m.email}
                         </span>
