@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -17,9 +18,14 @@ export default async function LoginPage({
         <div className="w-full max-w-sm">
           {/* Wordmark ringkas, cuma tampil saat brand panel tersembunyi (mobile/tablet). */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-              S
-            </div>
+            <Image
+              src="/logo-sirviu.png"
+              alt="Lambang Irban III"
+              width={29}
+              height={44}
+              className="h-11 w-auto shrink-0"
+              priority
+            />
             <div className="leading-none">
               <div className="text-sm font-bold tracking-tight text-foreground">
                 SIRVIU
