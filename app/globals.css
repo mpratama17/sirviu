@@ -109,15 +109,17 @@
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
 
-  /* Sidebar */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #1e40af;
+  /* Sidebar — navy gelap (permintaan user: warna pembeda dari konten utama
+     yang putih), senada dengan gradient AuthBrandPanel di halaman login
+     (`from-[#0f172a] to-[#1e3a8a]`) supaya identitas brand konsisten. */
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #1e40af;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #3b82f6;
 }
 
 .dark {

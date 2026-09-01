@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LogOut, User as UserIcon, ChevronsUpDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,14 @@ function initials(name: string): string {
     .join("");
 }
 
-export function UserMenu({ user }: { user: CurrentUser }) {
+export function UserMenu({
+  user,
+  collapsed = false,
+}: {
+  user: CurrentUser;
+  /** Rail mode sidebar (icon-only) — sembunyikan nama/role, tampilkan cuma avatar. */
+  collapsed?: boolean;
+}) {
   const roleLabels = (user.roles as Role[])
     .map((role) => ROLE_LABELS[role])
     .filter(Boolean)
@@ -34,24 +42,34 @@ export function UserMenu({ user }: { user: CurrentUser }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-sidebar-accent">
-        <Avatar className="size-8">
+      <DropdownMenuTrigger
+        title={collapsed ? user.name : undefined}
+        className={cn(
+          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-sidebar-accent",
+          collapsed && "justify-center px-0",
+        )}
+      >
+        <Avatar className="size-8 shrink-0">
           <AvatarFallback className="bg-primary text-xs text-primary-foreground">
             {initials(user.name)}
           </AvatarFallback>
         </Avatar>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-sidebar-foreground">
-            {user.name}
-          </p>
-          <p className="truncate text-xs text-text-muted">
-            {roleLabels || "Belum ada role"}
-          </p>
-        </div>
-        <ChevronsUpDown
-          className="size-4 shrink-0 text-text-muted"
-          aria-hidden="true"
-        />
+        {collapsed ? null : (
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-sidebar-foreground">
+                {user.name}
+              </p>
+              <p className="truncate text-xs text-text-muted">
+                {roleLabels || "Belum ada role"}
+              </p>
+            </div>
+            <ChevronsUpDown
+              className="size-4 shrink-0 text-text-muted"
+              aria-hidden="true"
+            />
+          </>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuGroup>

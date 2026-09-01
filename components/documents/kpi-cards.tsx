@@ -16,6 +16,8 @@ interface KpiDef {
   icon: LucideIcon;
   colorClass: string;
   bgClass: string;
+  /** Border kiri + tint background kartu (permintaan user: warna pembeda antar kartu, bukan cuma ikon kecil). */
+  accentClass: string;
 }
 
 /** 4 kartu ringkasan di atas dashboard — DESIGN_BRIEF mockup terbaru. */
@@ -28,6 +30,7 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
       icon: FileText,
       colorClass: "text-primary",
       bgClass: "bg-primary/10",
+      accentClass: "border-l-primary bg-primary/[0.03]",
     },
     {
       label: "Perlu Aksi Anda",
@@ -36,14 +39,16 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
       icon: AlertCircle,
       colorClass: "text-status-progress",
       bgClass: "bg-status-progress/10",
+      accentClass: "border-l-status-progress bg-status-progress/[0.04]",
     },
     {
       label: "Sedang Direviu",
       value: kpis.underReview,
       hint: "Stage 2 · 3 · 4",
       icon: Loader2,
-      colorClass: "text-status-progress",
-      bgClass: "bg-status-progress/10",
+      colorClass: "text-status-finalized",
+      bgClass: "bg-status-finalized/10",
+      accentClass: "border-l-status-finalized bg-status-finalized/[0.04]",
     },
     {
       label: "Aging > 7 Hari",
@@ -52,6 +57,7 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
       icon: Flame,
       colorClass: "text-status-revision",
       bgClass: "bg-status-revision/10",
+      accentClass: "border-l-status-revision bg-status-revision/[0.04]",
     },
   ];
 
@@ -60,7 +66,10 @@ export function KpiCards({ kpis }: { kpis: DashboardKpis }) {
       {defs.map((k) => (
         <div
           key={k.label}
-          className="rounded-lg border border-border bg-card px-4 py-3.5"
+          className={cn(
+            "rounded-lg border border-border border-l-4 bg-card px-4 py-3.5",
+            k.accentClass,
+          )}
         >
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-muted-foreground">{k.label}</span>
