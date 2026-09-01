@@ -65,7 +65,7 @@ export default async function LoginPage({
           </div>
 
           <p className="mt-10 text-center text-xs text-text-muted lg:hidden">
-            © {new Date().getFullYear()} Inspektorat — Internal use only.
+            © {new Date().getFullYear()} Irban III — Internal use only.
           </p>
         </div>
       </div>

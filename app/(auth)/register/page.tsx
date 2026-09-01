@@ -25,7 +25,7 @@ export default function RegisterPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-text-muted">
-        © {new Date().getFullYear()} Inspektorat — Internal use only.
+        © {new Date().getFullYear()} Irban III — Internal use only.
       </p>
     </div>
   );

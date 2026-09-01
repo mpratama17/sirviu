@@ -88,7 +88,7 @@ export function AuthBrandPanel() {
       </div>
 
       <p className="relative text-[11px] text-white/40">
-        © {new Date().getFullYear()} Inspektorat — Internal use only.
+        © {new Date().getFullYear()} Irban III — Internal use only.
       </p>
     </div>
   );
