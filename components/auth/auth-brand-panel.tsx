@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import { STAGE_DEFINITIONS } from "@/lib/constants/stages";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { Stage } from "@/lib/types/domain";
@@ -29,10 +30,17 @@ export function AuthBrandPanel() {
         aria-hidden="true"
       />
 
-      <div className="relative flex items-center gap-2.5">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white text-sm font-bold text-[#1e3a8a]">
-          S
-        </div>
+      <div className="relative flex items-center gap-3">
+        {/* Latar hitam asli lambang menyatu wajar dengan gradient panel ini
+            — makanya slot lama (kotak putih solid) sudah tidak perlu lagi. */}
+        <Image
+          src="/logo-sirviu.png"
+          alt="Lambang Irban III"
+          width={37}
+          height={56}
+          className="h-14 w-auto shrink-0"
+          priority
+        />
         <div className="leading-none">
           <div className="text-sm font-bold tracking-tight">SIRVIU</div>
           <div className="mt-0.5 text-[11px] text-white/60">

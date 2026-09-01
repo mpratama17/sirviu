@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -101,9 +102,17 @@ export function Sidebar({
         )}
       >
         <div className={cn("flex items-center gap-2.5", collapsed && "flex-col gap-2")}>
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-            S
-          </div>
+          {/* Lambang resmi (permintaan user) — portrait 319x480, jauh lebih
+              tinggi dari lebar, jadi slotnya bukan lagi kotak seperti monogram
+              "S" sebelumnya. */}
+          <Image
+            src="/logo-sirviu.png"
+            alt="Lambang Irban III"
+            width={29}
+            height={44}
+            className="h-11 w-auto shrink-0"
+            priority
+          />
           {collapsed ? null : (
             <div className="min-w-0 flex-1 leading-none">
               <div className="text-sm font-bold tracking-tight text-sidebar-foreground">
