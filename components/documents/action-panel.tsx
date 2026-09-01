@@ -34,7 +34,7 @@ export function ActionPanel({
   doc: MinimalDocument;
   currentUserId: string;
   holderName: string | null;
-  /** Label peran pemegang stage saat ini (mis. "Pengendali Mutu") — ditampilkan di dalam kurung pada state menunggu. */
+  /** Label peran pemegang stage saat ini (mis. "Irban (Pengendali Mutu)") — ditampilkan di dalam kurung pada state menunggu. */
   holderRoleLabel?: string | null;
   lastRejection: { actorName: string; comment: string } | null;
   /**

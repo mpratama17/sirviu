@@ -1,12 +1,13 @@
 import { CheckCircle2 } from "lucide-react";
 import { STAGE_DEFINITIONS } from "@/lib/constants/stages";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { Stage } from "@/lib/types/domain";
 
 /** Deskripsi singkat per stage — pelengkap `STAGE_DEFINITIONS[n].name`, khusus untuk konteks di halaman login (bukan dipakai di tempat lain). */
 const STAGE_BLURB: Record<Stage, string> = {
   1: "Ketua Tim menyusun draf laporan.",
   2: "Pengendali Teknis meninjau isi & metodologi.",
-  3: "Pengendali Mutu memastikan standar mutu.",
+  3: `${ROLE_LABELS.dalmut} memastikan standar mutu.`,
   4: "Operator merapikan format sebelum rilis.",
   5: "Laporan final, siap didistribusikan.",
 };

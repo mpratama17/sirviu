@@ -9,11 +9,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserCombobox, type SelectableUser } from "@/components/documents/user-combobox";
 import { addTeamMember, removeTeamMember } from "@/lib/actions/team";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { Role } from "@/lib/types/domain";
 
+// dalmut lewat ROLE_LABELS (bukan hardcode "(Dalmut)") — sudah punya
+// parenthetical sendiri ("Irban (Pengendali Mutu)"), dobel kurung kalau
+// ditambah lagi.
 const ROLE_SECTIONS: { role: Role; label: string }[] = [
   { role: "dalnis", label: "Pengendali Teknis (Dalnis)" },
-  { role: "dalmut", label: "Pengendali Mutu (Dalmut)" },
+  { role: "dalmut", label: ROLE_LABELS.dalmut },
   { role: "operator", label: "Operator" },
 ];
 

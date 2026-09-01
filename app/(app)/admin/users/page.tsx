@@ -7,6 +7,7 @@ import { AdminTeamsPanel, type AdminTeam } from "@/components/admin/admin-teams-
 import type { SelectableUser } from "@/components/documents/user-combobox";
 import type { EditableUser } from "@/components/admin/edit-user-modal";
 import { parseSortParams } from "@/lib/utils/sort";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { Role } from "@/lib/types/domain";
 
 const USERS_SORT_ALLOWED = ["name", "email", "created_at"] as const;
@@ -99,8 +100,9 @@ export default async function AdminUsersPage({
             Tim &amp; Anggota
           </h2>
           <p className="text-sm text-muted-foreground">
-            Anggota tim menentukan siapa yang bisa dipilih Ketua Tim sebagai
-            Pengendali Teknis, Pengendali Mutu, dan Operator saat upload dokumen.
+            Anggota tim menentukan siapa yang bisa dipilih Ketua Tim sebagai{" "}
+            {ROLE_LABELS.dalnis}, {ROLE_LABELS.dalmut}, dan {ROLE_LABELS.operator}{" "}
+            saat upload dokumen.
           </p>
         </div>
         <AdminTeamsPanel teams={teams} unassigned={unassigned} />

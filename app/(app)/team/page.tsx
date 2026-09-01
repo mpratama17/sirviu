@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/session";
 import { TeamManager } from "@/components/team/team-manager";
 import type { SelectableUser } from "@/components/documents/user-combobox";
+import { ROLE_LABELS } from "@/lib/constants/roles";
 
 /**
  * Anggota tim (Ketua Tim ↔ dalnis/dalmut/operator) — masukan user setelah
@@ -49,8 +50,8 @@ export default async function TeamPage() {
         Tim Saya
       </h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        Anggota di sini yang muncul sebagai pilihan Pengendali Teknis,
-        Pengendali Mutu, dan Operator saat upload dokumen baru.
+        Anggota di sini yang muncul sebagai pilihan {ROLE_LABELS.dalnis},{" "}
+        {ROLE_LABELS.dalmut}, dan {ROLE_LABELS.operator} saat upload dokumen baru.
       </p>
       <TeamManager members={members} available={available} />
     </div>
