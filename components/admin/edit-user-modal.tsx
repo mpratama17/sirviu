@@ -81,6 +81,12 @@ export function EditUserModal({
           <div className="flex flex-col gap-1.5">
             <Label>Roles</Label>
             <RoleMultiSelect value={roles} onChange={setRoles} />
+            {roles.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Tanpa role, user akan melihat layar “Pilih Peran” lagi saat
+                login berikutnya.
+              </p>
+            ) : null}
           </div>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
             <Checkbox checked={isActive} onCheckedChange={(checked) => setIsActive(checked === true)} />
@@ -92,7 +98,7 @@ export function EditUserModal({
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isPending}>
             Batal
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending || !name.trim() || roles.length === 0}>
+          <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
             {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
             Simpan Perubahan
           </Button>
