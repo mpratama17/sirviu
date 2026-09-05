@@ -96,7 +96,7 @@ export default async function AdminUsersPage({
 
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
             Tim &amp; Anggota
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -109,7 +109,7 @@ export default async function AdminUsersPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">
           Semua Pengguna
         </h2>
         <UsersTable users={rows} activeSort={activeSort} />
