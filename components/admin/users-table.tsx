@@ -55,6 +55,7 @@ export function UsersTable({
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [editing, setEditing] = useState<EditableUser | null>(null);
   const [, startTransition] = useTransition();
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -70,13 +71,16 @@ export function UsersTable({
   }, [users, query, roleFilter, statusFilter]);
 
   function handleToggle(user: EditableUser, next: boolean) {
+    setTogglingId(user.id);
     startTransition(async () => {
       const result = await toggleUserActive(user.id, next);
       if (!result.success) {
         toast.error(result.error);
+        setTogglingId(null);
         return;
       }
       router.refresh();
+      setTogglingId(null);
     });
   }
 
@@ -158,10 +162,13 @@ export function UsersTable({
                   <Tooltip>
                     <TooltipTrigger
                       render={
-                        <span className="inline-flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-2 ${togglingId === user.id ? "opacity-50" : ""}`}
+                        >
                           <Switch
                             checked={user.isActive}
                             onCheckedChange={(checked) => handleToggle(user, checked)}
+                            disabled={togglingId === user.id}
                             aria-label={user.isActive ? "Nonaktifkan" : "Aktifkan"}
                           />
                           {user.isActive ? "Aktif" : "Non-aktif"}
