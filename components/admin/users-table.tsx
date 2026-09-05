@@ -54,7 +54,7 @@ export function UsersTable({
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [editing, setEditing] = useState<EditableUser | null>(null);
-  const [, startTransition] = useTransition();
+  const [isTogglePending, startTransition] = useTransition();
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -79,8 +79,13 @@ export function UsersTable({
         setTogglingId(null);
         return;
       }
+      // Sengaja TIDAK clear togglingId di sini — router.refresh() tidak
+      // menunggu data baru selesai di-render sebelum resolve, jadi kalau
+      // di-clear langsung, switch sempat balik ke state LAMA sebentar
+      // sebelum akhirnya flip ke state baru (persis kebingungan "kepencet
+      // apa nggak" yang mau dihindari). isTogglePending dari useTransition
+      // tetap true sampai re-render dari refresh ini benar-benar commit.
       router.refresh();
-      setTogglingId(null);
     });
   }
 
@@ -163,12 +168,12 @@ export function UsersTable({
                     <TooltipTrigger
                       render={
                         <span
-                          className={`inline-flex items-center gap-2 ${togglingId === user.id ? "opacity-50" : ""}`}
+                          className={`inline-flex items-center gap-2 ${isTogglePending && togglingId === user.id ? "opacity-50" : ""}`}
                         >
                           <Switch
                             checked={user.isActive}
                             onCheckedChange={(checked) => handleToggle(user, checked)}
-                            disabled={togglingId === user.id}
+                            disabled={isTogglePending && togglingId === user.id}
                             aria-label={user.isActive ? "Nonaktifkan" : "Aktifkan"}
                           />
                           {user.isActive ? "Aktif" : "Non-aktif"}

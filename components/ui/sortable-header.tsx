@@ -60,6 +60,13 @@ export function SortableHeader({
     <Link
       href={href}
       scroll={false}
+      // prefetch={false}: tabel selalu di viewport, jadi Link ini SELALU
+      // ke-prefetch default-nya — pending dari useLinkStatus jadi nggak
+      // pernah true (data sudah siap sebelum diklik), spinner-nya nggak
+      // pernah kelihatan. Ini juga buang N kolom x 2 arah render server
+      // spekulatif tiap tabel di-render, padahal aksinya baru relevan
+      // pas benar-benar diklik.
+      prefetch={false}
       className={cn(
         "inline-flex select-none items-center gap-1 rounded-sm py-0.5 text-inherit transition-colors hover:text-foreground",
         align === "right" && "justify-end",
