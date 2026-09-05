@@ -82,12 +82,12 @@ export default async function ProfilePage() {
       </div>
 
       <div className="rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-3.5 text-[15px] font-semibold text-foreground">Informasi Akun</h2>
+        <h2 className="mb-3.5 text-base font-semibold text-foreground">Informasi Akun</h2>
         <ProfileForm name={user.name} email={user.email} />
       </div>
 
       <div className="rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-3.5 text-[15px] font-semibold text-foreground">Aktivitas</h2>
+        <h2 className="mb-3.5 text-base font-semibold text-foreground">Aktivitas</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((s) => (
             <div key={s.role} className="rounded-md border border-border p-3">
