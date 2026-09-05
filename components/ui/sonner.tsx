@@ -11,6 +11,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      richColors
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />
@@ -34,6 +35,18 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
+          // richColors di atas nyalain per-jenis warna sonner (success/
+          // warning/error/info) — di-override ke token status yang sudah
+          // ada (bukan warna baru) biar konsisten sama StatusBadge dkk.
+          "--success-bg": "color-mix(in oklch, var(--status-approved) 12%, var(--popover))",
+          "--success-border": "var(--status-approved)",
+          "--success-text": "var(--status-approved)",
+          "--warning-bg": "color-mix(in oklch, var(--status-progress) 12%, var(--popover))",
+          "--warning-border": "var(--status-progress)",
+          "--warning-text": "var(--status-progress)",
+          "--error-bg": "color-mix(in oklch, var(--destructive) 12%, var(--popover))",
+          "--error-border": "var(--destructive)",
+          "--error-text": "var(--destructive)",
         } as React.CSSProperties
       }
       toastOptions={{

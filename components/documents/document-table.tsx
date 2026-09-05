@@ -83,8 +83,10 @@ export function DocumentTable({
                   {row.nomorSuratTugas}
                 </Link>
               </TableCell>
-              <TableCell className="max-w-64 truncate" title={row.namaLaporan}>
-                {row.namaLaporan}
+              <TableCell className="max-w-64" title={row.namaLaporan}>
+                <Link href={`/documents/${row.id}`} className="block truncate hover:underline">
+                  {row.namaLaporan}
+                </Link>
               </TableCell>
               {showTeam ? (
                 <TableCell className="max-w-40 truncate" title={row.teamName}>

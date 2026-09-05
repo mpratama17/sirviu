@@ -1,7 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function DocumentPagination({
@@ -14,11 +15,14 @@ export function DocumentPagination({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   function goTo(nextPage: number) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(nextPage));
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   }
 
   if (totalPages <= 1) return null;
@@ -33,20 +37,28 @@ export function DocumentPagination({
         <Button
           variant="outline"
           size="sm"
-          disabled={page <= 1}
+          disabled={page <= 1 || isPending}
           onClick={() => goTo(page - 1)}
         >
-          <ChevronLeft className="size-4" aria-hidden="true" />
+          {isPending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ChevronLeft className="size-4" aria-hidden="true" />
+          )}
           Sebelumnya
         </Button>
         <Button
           variant="outline"
           size="sm"
-          disabled={page >= totalPages}
+          disabled={page >= totalPages || isPending}
           onClick={() => goTo(page + 1)}
         >
           Selanjutnya
-          <ChevronRight className="size-4" aria-hidden="true" />
+          {isPending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="size-4" aria-hidden="true" />
+          )}
         </Button>
       </div>
     </div>

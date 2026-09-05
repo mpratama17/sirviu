@@ -1,10 +1,30 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildSortHref, type SortState } from "@/lib/utils/sort";
+
+/**
+ * `useLinkStatus` cuma bisa dipakai di descendant `<Link>` (bukan di
+ * `SortableHeader` sendiri) — lihat next/dist/docs/.../use-link-status.md.
+ * Ganti panah sort jadi spinner selama navigasi (klik sort re-fetch
+ * server component via searchParams, TIDAK trigger loading.tsx route
+ * karena masih di segment yang sama).
+ */
+function SortIcon({ icon: Icon, isActive }: { icon: typeof ArrowUpDown; isActive: boolean }) {
+  const { pending } = useLinkStatus();
+  if (pending) {
+    return <Loader2 className="size-3.5 shrink-0 animate-spin text-primary" aria-hidden="true" />;
+  }
+  return (
+    <Icon
+      className={cn("size-3.5 shrink-0", isActive ? "text-primary" : "text-text-muted opacity-70")}
+      aria-hidden="true"
+    />
+  );
+}
 
 /**
  * Tombol column-header yang bisa di-klik untuk sort. Dipakai di dalam
@@ -40,6 +60,13 @@ export function SortableHeader({
     <Link
       href={href}
       scroll={false}
+      // prefetch={false}: tabel selalu di viewport, jadi Link ini SELALU
+      // ke-prefetch default-nya — pending dari useLinkStatus jadi nggak
+      // pernah true (data sudah siap sebelum diklik), spinner-nya nggak
+      // pernah kelihatan. Ini juga buang N kolom x 2 arah render server
+      // spekulatif tiap tabel di-render, padahal aksinya baru relevan
+      // pas benar-benar diklik.
+      prefetch={false}
       className={cn(
         "inline-flex select-none items-center gap-1 rounded-sm py-0.5 text-inherit transition-colors hover:text-foreground",
         align === "right" && "justify-end",
@@ -47,13 +74,7 @@ export function SortableHeader({
       )}
     >
       {label}
-      <Icon
-        className={cn(
-          "size-3.5 shrink-0",
-          isActive ? "text-primary" : "text-text-muted opacity-70",
-        )}
-        aria-hidden="true"
-      />
+      <SortIcon icon={Icon} isActive={isActive} />
     </Link>
   );
 }
