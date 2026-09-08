@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ import { UserCombobox, type SelectableUser } from "@/components/documents/user-c
 import { FileDropzone } from "@/components/documents/file-dropzone";
 import { createDocument } from "@/lib/actions/documents";
 import { ROLE_LABELS } from "@/lib/constants/roles";
+import { cn } from "@/lib/utils";
 import {
   documentMetadataSchema,
   type DocumentMetadataInput,
@@ -32,6 +33,80 @@ function SectionTitle({ n, children }: { n: number; children: ReactNode }) {
   );
 }
 
+/** Form ini 1 halaman panjang berisi 4 section — bukan wizard multi-halaman,
+ * jadi breadcrumb (navigasi antar-halaman) tidak relevan di sini. Yang
+ * dibutuhkan adalah user tahu "lagi di section mana" pas scroll: nav
+ * sticky ini highlight section yang sedang kelihatan (scrollspy) dan
+ * klik = lompat ke section itu. */
+const FORM_SECTIONS = [
+  { id: "section-info", label: "Info Dokumen" },
+  { id: "section-tim", label: "Tim Reviewer" },
+  { id: "section-file", label: "File" },
+  { id: "section-catatan", label: "Catatan" },
+] as const;
+const FORM_SECTION_IDS = FORM_SECTIONS.map((s) => s.id);
+
+/** Scrollspy minimal: section aktif = yang pertama (urutan dokumen) dari
+ * yang sedang intersecting. `rootMargin` bikin garis deteksi tepat di
+ * bawah nav sticky, bukan di tengah viewport, biar transisi antar-section
+ * terasa pas dengan yang benar-benar kelihatan di layar. */
+function useActiveSection(ids: readonly string[]): string {
+  const [active, setActive] = useState<string>(ids[0]);
+
+  useEffect(() => {
+    const elements = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    const visibility = new Map<string, boolean>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => visibility.set(entry.target.id, entry.isIntersecting));
+        const firstVisible = ids.find((id) => visibility.get(id));
+        if (firstVisible) setActive(firstVisible);
+      },
+      { rootMargin: "-96px 0px -70% 0px", threshold: 0 },
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [ids]);
+
+  return active;
+}
+
+function SectionNav({ activeId }: { activeId: string }) {
+  return (
+    <nav
+      aria-label="Bagian formulir"
+      className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6"
+    >
+      {FORM_SECTIONS.map((section, i) => (
+        <a
+          key={section.id}
+          href={`#${section.id}`}
+          aria-current={activeId === section.id ? "location" : undefined}
+          className={cn(
+            "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+            activeId === section.id
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <span
+            className={cn(
+              "flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] tabular-nums",
+              activeId === section.id ? "bg-primary text-primary-foreground" : "bg-secondary",
+            )}
+          >
+            {i + 1}
+          </span>
+          {section.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 export function DocumentForm({
   users,
   currentUserId,
@@ -46,6 +121,7 @@ export function DocumentForm({
   const [isPending, startTransition] = useTransition();
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | undefined>();
+  const activeSection = useActiveSection(FORM_SECTION_IDS);
 
   const {
     register,
@@ -103,7 +179,8 @@ export function DocumentForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 pb-24">
-      <Card>
+      <SectionNav activeId={activeSection} />
+      <Card id="section-info" className="scroll-mt-20">
         <CardHeader>
           <SectionTitle n={1}>Informasi Dokumen</SectionTitle>
         </CardHeader>
@@ -141,7 +218,7 @@ export function DocumentForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="section-tim" className="scroll-mt-20">
         <CardHeader>
           <SectionTitle n={2}>Tim Reviewer</SectionTitle>
         </CardHeader>
@@ -235,7 +312,7 @@ export function DocumentForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="section-file" className="scroll-mt-20">
         <CardHeader>
           <SectionTitle n={3}>File Dokumen</SectionTitle>
         </CardHeader>
@@ -244,7 +321,7 @@ export function DocumentForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="section-catatan" className="scroll-mt-20">
         <CardHeader>
           <SectionTitle n={4}>Catatan (opsional)</SectionTitle>
         </CardHeader>

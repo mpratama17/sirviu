@@ -187,7 +187,7 @@ export default async function DocumentDetailPage({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-foreground">Dokumen</h2>
+            <h2 className="text-base font-semibold text-foreground">Dokumen</h2>
             <div className="flex items-center gap-2">
               {selectedVersion ? (
                 <VersionSelector
@@ -222,7 +222,7 @@ export default async function DocumentDetailPage({
             </p>
           ) : null}
 
-          <h2 className="mt-3 text-lg font-semibold text-foreground">Riwayat Versi</h2>
+          <h2 className="mt-3 text-base font-semibold text-foreground">Riwayat Versi</h2>
           {allVersions.map((v) => (
             <VersionCard
               key={v.id}
@@ -238,7 +238,7 @@ export default async function DocumentDetailPage({
             />
           ))}
 
-          <h2 className="mt-3 text-lg font-semibold text-foreground">Timeline</h2>
+          <h2 className="mt-3 text-base font-semibold text-foreground">Timeline</h2>
           <div className="rounded-lg border border-border bg-card p-4">
             <StageTimeline
               currentStage={doc.current_stage as Stage}
