@@ -18,6 +18,7 @@ import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
 import { DocumentCardList } from "@/components/documents/document-card-list";
 import { SortableHeader } from "@/components/ui/sortable-header";
+import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { SortState } from "@/lib/utils/sort";
 import type { DocumentStatus, Role, Stage } from "@/lib/types/domain";
@@ -33,6 +34,12 @@ export interface DocumentRow {
   myRole: Role | null;
   /** Nama Ketua Tim pemilik dokumen — hanya diisi untuk admin (lihat dashboard). */
   teamName?: string;
+  /** Ada notifikasi "perlu tindakan" milik saya yang belum dibuka untuk
+   * dokumen ini — highlight baris (lihat `MarkReadOnView`, hilang begitu
+   * halaman detail dokumen dibuka). Bahasa visualnya sama dgn NotificationBell:
+   * dot primary + tint baris + bold, bukan badge baru (sudah ada
+   * StageBadge/StatusBadge di baris yang sama). */
+  hasUnread?: boolean;
 }
 
 export function DocumentTable({
@@ -77,11 +84,25 @@ export function DocumentTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} className="group">
+            <TableRow
+              key={row.id}
+              className={cn("group", row.hasUnread && "bg-primary/[0.04]")}
+            >
               <TableCell className="tabular-nums">
-                <Link href={`/documents/${row.id}`} className="hover:underline">
-                  {row.nomorSuratTugas}
-                </Link>
+                <div className="flex items-center gap-2">
+                  {row.hasUnread ? (
+                    <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                  ) : (
+                    <span className="size-1.5 shrink-0" aria-hidden="true" />
+                  )}
+                  <Link
+                    href={`/documents/${row.id}`}
+                    className={cn("hover:underline", row.hasUnread && "font-semibold")}
+                  >
+                    {row.nomorSuratTugas}
+                  </Link>
+                  {row.hasUnread ? <span className="sr-only">— perlu tindakan, belum dibuka</span> : null}
+                </div>
               </TableCell>
               <TableCell className="max-w-64" title={row.namaLaporan}>
                 <Link href={`/documents/${row.id}`} className="block truncate hover:underline">

@@ -184,10 +184,17 @@ export default async function DashboardPage({
       `nomor_surat_tugas.ilike.%${q}%,nama_laporan.ilike.%${q}%`,
     );
 
-  const [{ data, count, error }, kpis] = await Promise.all([
+  const [{ data, count, error }, kpis, { data: unreadRows }] = await Promise.all([
     query.order(orderColumn, { ascending }).range(rangeFrom, rangeTo),
     getDashboardKpis(supabase, user.id, isAdmin),
+    // Dokumen "belum dibuka" (highlight tabel) — RLS notifications_select
+    // sudah scope ke user_id = auth.uid(), jadi query ini murni milik
+    // saya. Sistem menjamin maksimal 1 notif unread per dokumen di
+    // seluruh sistem (lihat _clear_document_notifications), jadi query
+    // ini selalu murah — tidak perlu di-scope ke halaman saat ini.
+    supabase.from("notifications").select("document_id").is("read_at", null),
   ]);
+  const unreadDocIds = new Set((unreadRows ?? []).map((n) => n.document_id));
 
   if (error) {
     return (
@@ -238,6 +245,7 @@ export default async function DashboardPage({
       user.id,
     ),
     teamName: teamNames.get(doc.ketua_tim_id),
+    hasUnread: unreadDocIds.has(doc.id),
   }));
 
   const totalCount = count ?? 0;

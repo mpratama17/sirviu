@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import { StageBadge } from "@/components/documents/stage-badge";
 import { StatusBadge } from "@/components/documents/status-badge";
 import { DaysInStage } from "@/components/documents/days-in-stage";
+import { cn } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants/roles";
 import type { DocumentRow } from "@/components/documents/document-table";
 
@@ -35,12 +36,21 @@ export function DocumentCardList({
           onKeyDown={(e) => {
             if (e.key === "Enter") router.push(`/documents/${row.id}`);
           }}
-          className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card p-4"
+          className={cn(
+            "flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card p-4",
+            row.hasUnread && "bg-primary/[0.04]",
+          )}
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium tabular-nums text-foreground">
-                {row.nomorSuratTugas}
+              <p className="flex items-center gap-2 truncate text-sm font-medium tabular-nums text-foreground">
+                {row.hasUnread ? (
+                  <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                ) : null}
+                <span className={cn("truncate", row.hasUnread && "font-semibold")}>
+                  {row.nomorSuratTugas}
+                </span>
+                {row.hasUnread ? <span className="sr-only">— perlu tindakan, belum dibuka</span> : null}
               </p>
               <p className="truncate text-sm text-muted-foreground">{row.namaLaporan}</p>
               {showTeam ? (
