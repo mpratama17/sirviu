@@ -16,6 +16,9 @@ export interface TimelineTransition {
   versionNumber: number | null;
   isSuperseded: boolean;
   createdAt: string;
+  /** Nama file lampiran scan koreksi manual (action=reject saja) — null
+   * kalau tidak ada lampiran. Dipakai `CommentHistory` untuk link download. */
+  attachmentName: string | null;
 }
 
 type StageStatus = "current" | "passed" | "revision" | "untouched";

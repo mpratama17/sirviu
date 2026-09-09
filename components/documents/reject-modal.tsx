@@ -21,8 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileDropzone } from "@/components/documents/file-dropzone";
 import { getDefaultRejectTarget, STAGE_DEFINITIONS } from "@/lib/constants/stages";
 import { rejectReviewSchema } from "@/lib/validators/reviews";
+import { validateAttachmentFile } from "@/lib/validators/documents";
 import { rejectReview } from "@/lib/actions/reviews";
 import type { Stage } from "@/lib/types/domain";
 
@@ -47,6 +49,8 @@ export function RejectModal({
     getDefaultRejectTarget(fromStage),
   );
   const [comment, setComment] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -56,16 +60,28 @@ export function RejectModal({
       setError(parsed.error.issues[0]?.message ?? "Data tidak valid.");
       return;
     }
+    const attachmentCheck = validateAttachmentFile(attachment);
+    if (!attachmentCheck.valid) {
+      setAttachmentError(attachmentCheck.error);
+      return;
+    }
     setError(null);
+    setAttachmentError(undefined);
+
+    const formData = new FormData();
+    formData.set("targetStage", String(targetStage));
+    formData.set("comment", comment);
+    if (attachment) formData.set("attachment", attachment);
 
     startTransition(async () => {
-      const result = await rejectReview(documentId, targetStage, comment);
+      const result = await rejectReview(documentId, formData);
       if (!result.success) {
         toast.error(result.error);
         return;
       }
       toast.success("Dokumen dikembalikan untuk revisi.");
       setComment("");
+      setAttachment(null);
       onOpenChange(false);
       router.refresh();
     });
@@ -116,6 +132,18 @@ export function RejectModal({
                 {error}
               </p>
             ) : null}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Lampiran Scan Koreksi Manual (opsional)</Label>
+            <FileDropzone
+              file={attachment}
+              onChange={setAttachment}
+              error={attachmentError}
+              accept="application/pdf"
+              validate={validateAttachmentFile}
+              hint="Format: PDF (hasil scan dokumen fisik yang sudah dikoreksi). Maksimal 10 MB."
+            />
           </div>
 
           <div className="flex gap-2 rounded-md bg-secondary p-3 text-sm text-muted-foreground">

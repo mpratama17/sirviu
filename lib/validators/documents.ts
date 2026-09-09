@@ -110,3 +110,25 @@ export function validateUploadFile(
   }
   return { valid: true };
 }
+
+/**
+ * Validasi lampiran scan koreksi manual di aksi "Kembalikan untuk Revisi"
+ * (reject) — beda dari `validateUploadFile`: OPSIONAL (tidak ada file =
+ * valid) dan PDF-only (ini scan dokumen fisik, bukan file dokumen
+ * Word yang masih bisa diedit).
+ */
+export function validateAttachmentFile(
+  file: File | null,
+): { valid: true } | { valid: false; error: string } {
+  if (!file || file.size === 0) return { valid: true };
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return {
+      valid: false,
+      error: "File lampiran terlalu besar. Maksimal 10 MB — silakan kompres file.",
+    };
+  }
+  if (file.type !== "application/pdf") {
+    return { valid: false, error: "Lampiran scan harus berformat PDF." };
+  }
+  return { valid: true };
+}

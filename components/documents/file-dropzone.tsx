@@ -15,10 +15,20 @@ export function FileDropzone({
   file,
   onChange,
   error,
+  accept = ALLOWED_MIME_TYPES.join(","),
+  validate = validateUploadFile,
+  hint = "Format: PDF atau Word (.docx). Maksimal 10 MB.",
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
   error?: string;
+  /** `accept` attribute native input file — default: dokumen (PDF/.docx). */
+  accept?: string;
+  /** Validator dipakai saat file dipilih — default: `validateUploadFile`
+   * (wajib ada file). Ganti utk kasus lain, mis. lampiran opsional PDF-only. */
+  validate?: (file: File) => { valid: true } | { valid: false; error: string };
+  /** Teks bantuan di bawah ikon upload — sesuaikan dengan `accept`/`validate`. */
+  hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -27,7 +37,7 @@ export function FileDropzone({
   const handleFile = useCallback(
     (candidate: File | undefined | null) => {
       if (!candidate) return;
-      const result = validateUploadFile(candidate);
+      const result = validate(candidate);
       if (!result.valid) {
         setLocalError(result.error);
         onChange(null);
@@ -36,7 +46,7 @@ export function FileDropzone({
       setLocalError(null);
       onChange(candidate);
     },
-    [onChange],
+    [onChange, validate],
   );
 
   const displayError = error ?? localError;
@@ -89,13 +99,11 @@ export function FileDropzone({
           Tarik file ke sini, atau{" "}
           <span className="font-medium text-primary">pilih file</span>
         </p>
-        <p className="text-xs text-text-muted">
-          Format: PDF atau Word (.docx). Maksimal 10 MB.
-        </p>
+        <p className="text-xs text-text-muted">{hint}</p>
         <input
           ref={inputRef}
           type="file"
-          accept={ALLOWED_MIME_TYPES.join(",")}
+          accept={accept}
           className="sr-only"
           aria-label="Upload file dokumen"
           onChange={(e) => handleFile(e.target.files?.[0])}
