@@ -9,7 +9,7 @@ and permanent-record safeguards at every mutation.
 Built solo end-to-end (schema, RLS policies, state machine, UI) as a real
 production tool now used by an actual Inspectorate team, not a demo.
 
-**Live app:** [sirviu.vercel.app](https://sirviu.vercel.app)
+*Live app link omitted — internal-use-only tool for a real government team.*
 
 ---
 

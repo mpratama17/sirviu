@@ -6,8 +6,8 @@ screenshot). Untuk histori keputusan & alasan di balik tiap perubahan, baca
 
 ## Status: deployed, live, dipakai user asli
 
-- **Live:** [sirviu.vercel.app](https://sirviu.vercel.app) (Vercel,
-  git-integrated — push ke `main` auto-deploy).
+- **Live:** internal-use-only, link tidak dicantumkan di repo publik
+  (Vercel, git-integrated — push ke `main` auto-deploy).
 - **Repo:** `mpratama17/sirviu`, **private** di GitHub (dikonfirmasi lewat
   `gh repo view` — README menyebut "public-for-portfolio intent" tapi
   visibility aktualnya masih private; belum ada keputusan final soal ini).
