@@ -141,6 +141,12 @@ export interface Database {
           is_superseded: boolean;
           is_admin_override: boolean;
           created_at: string;
+          // Migration 20260909000001 — lampiran scan koreksi manual,
+          // opsional, cuma diisi utk action='reject'.
+          attachment_path: string | null;
+          attachment_name: string | null;
+          attachment_size: number | null;
+          attachment_mime_type: string | null;
         };
         Insert: {
           id?: string;
@@ -155,6 +161,10 @@ export interface Database {
           is_superseded?: boolean;
           is_admin_override?: boolean;
           created_at?: string;
+          attachment_path?: string | null;
+          attachment_name?: string | null;
+          attachment_size?: number | null;
+          attachment_mime_type?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["stage_transitions"]["Insert"]
@@ -326,6 +336,10 @@ export interface Database {
           p_document_id: string;
           p_target_stage: number;
           p_comment: string;
+          p_attachment_path?: string | null;
+          p_attachment_name?: string | null;
+          p_attachment_size?: number | null;
+          p_attachment_mime_type?: string | null;
         };
         Returns: Database["public"]["Tables"]["documents"]["Row"];
       };

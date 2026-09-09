@@ -108,6 +108,7 @@ export default async function DocumentDetailPage({
     versionNumber: t.version_id ? (versionNumberById.get(t.version_id) ?? null) : null,
     isSuperseded: t.is_superseded,
     createdAt: t.created_at,
+    attachmentName: t.attachment_name,
   }));
 
   const minimalDoc: MinimalDocument = {
@@ -249,7 +250,7 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <CommentHistory transitions={transitions} />
+          <CommentHistory documentId={doc.id} transitions={transitions} />
         </div>
 
         <div className="flex flex-col gap-4">

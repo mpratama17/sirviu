@@ -1,3 +1,4 @@
+import { Paperclip } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Accordion,
@@ -20,8 +21,10 @@ function initials(name: string): string {
 
 /** Riwayat semua komentar reject — DESIGN_BRIEF §5.5.D, accordion collapsed default. */
 export function CommentHistory({
+  documentId,
   transitions,
 }: {
+  documentId: string;
   transitions: readonly TimelineTransition[];
 }) {
   const rejections = transitions.filter((t) => t.action === "reject" && t.comment);
@@ -58,6 +61,15 @@ export function CommentHistory({
                   {t.versionNumber ? ` · v${t.versionNumber}` : ""}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{t.comment}</p>
+                {t.attachmentName ? (
+                  <a
+                    href={`/documents/${documentId}/download-attachment?transition=${t.id}`}
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                  >
+                    <Paperclip className="size-3.5 shrink-0" aria-hidden="true" />
+                    {t.attachmentName}
+                  </a>
+                ) : null}
               </div>
             </div>
           ))}

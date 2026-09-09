@@ -1,10 +1,11 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rejectReviewSchema, approveReviewSchema } from "@/lib/validators/reviews";
-import { validateUploadFile } from "@/lib/validators/documents";
+import { validateUploadFile, validateAttachmentFile } from "@/lib/validators/documents";
 import type { ActionResult } from "@/lib/types/action-result";
 
 /**
@@ -53,14 +54,24 @@ export async function approveReview(
   return { success: true, data: undefined };
 }
 
+/**
+ * Lampiran (`attachment` di formData) OPSIONAL — file PDF hasil scan
+ * dokumen fisik yang sudah dikoreksi manual (permintaan user setelah demo
+ * 2026-09-05). Beda dari upload_revision/revise_and_forward: ini BUKAN
+ * versi dokumen resmi berikutnya, cuma lampiran pelengkap yang nempel
+ * ke baris audit reject-nya sendiri (lihat migration ...20260909000001).
+ * Upload storage dulu baru RPC — pola sama dgn createDocument/uploadRevision
+ * (storage tidak transactional dgn Postgres; kalau RPC gagal, file
+ * lampiran dihapus lagi / jadi orphan-harmless kalau cleanup-nya sendiri
+ * gagal).
+ */
 export async function rejectReview(
   documentId: string,
-  rawTargetStage: number,
-  rawComment: string,
+  formData: FormData,
 ): Promise<ActionResult> {
   const parsed = rejectReviewSchema.safeParse({
-    targetStage: rawTargetStage,
-    comment: rawComment,
+    targetStage: formData.get("targetStage"),
+    comment: formData.get("comment"),
   });
   if (!parsed.success) {
     return {
@@ -69,13 +80,47 @@ export async function rejectReview(
     };
   }
 
+  const rawAttachment = formData.get("attachment");
+  const attachment =
+    rawAttachment instanceof File && rawAttachment.size > 0 ? rawAttachment : null;
+  const attachmentCheck = validateAttachmentFile(attachment);
+  if (!attachmentCheck.valid) {
+    return { success: false, error: attachmentCheck.error };
+  }
+
   const supabase = await createClient();
+
+  let attachmentPath: string | null = null;
+  if (attachment) {
+    const admin = createAdminClient();
+    const sanitizedFileName = attachment.name.replace(/[^\w.\-]+/g, "_");
+    attachmentPath = `${documentId}/reject/${randomUUID()}_${sanitizedFileName}`;
+    const { error: uploadError } = await admin.storage
+      .from("documents")
+      .upload(attachmentPath, attachment, {
+        contentType: attachment.type,
+        upsert: false,
+      });
+    if (uploadError) {
+      return { success: false, error: `Gagal upload lampiran: ${uploadError.message}` };
+    }
+  }
+
   const { error } = await supabase.rpc("reject_review", {
     p_document_id: documentId,
     p_target_stage: parsed.data.targetStage,
     p_comment: parsed.data.comment,
+    p_attachment_path: attachmentPath,
+    p_attachment_name: attachment?.name ?? null,
+    p_attachment_size: attachment?.size ?? null,
+    p_attachment_mime_type: attachment?.type ?? null,
   });
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    if (attachmentPath) {
+      await createAdminClient().storage.from("documents").remove([attachmentPath]);
+    }
+    return { success: false, error: error.message };
+  }
   revalidateDocument(documentId);
   return { success: true, data: undefined };
 }
