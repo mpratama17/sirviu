@@ -11,6 +11,7 @@ import { PdfViewerLoader } from "@/components/documents/pdf-viewer-loader";
 import { StageTimeline, type TimelineTransition } from "@/components/documents/stage-timeline";
 import { CommentHistory } from "@/components/documents/comment-history";
 import { ActionPanel } from "@/components/documents/action-panel";
+import { MarkReadOnView } from "@/components/documents/mark-read-on-view";
 import { DeleteDocumentButton } from "@/components/documents/delete-document-button";
 import { AdminDeleteButton } from "@/components/documents/admin-delete-button";
 import { EditDocumentModal } from "@/components/documents/edit-document-modal";
@@ -178,6 +179,7 @@ export default async function DocumentDetailPage({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <MarkReadOnView documentId={doc.id} />
       <div>
         <p className="text-sm text-text-muted tabular-nums">{doc.nomor_surat_tugas}</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
